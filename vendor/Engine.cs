@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using skystride.objects.templates;
+using skystride.scenes;
 
 namespace skystride.vendor
 {
@@ -23,9 +24,6 @@ namespace skystride.vendor
         private bool firstCameraMove = true;
         private bool isMouseCentered = false;
         private Vector2 latestMousePosition;
-
-        // objects instances
-        Grid grid = new Grid();
 
         // init engine window
         public Engine() : base(800, 600, new GraphicsMode(32, 24, 0, 8))
@@ -47,7 +45,7 @@ namespace skystride.vendor
             GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);
             GL.Enable(EnableCap.LineSmooth);
 
-            camera = new Camera(new Vector3(0, 0, 3), Width / (float)Height);
+            camera = new Camera(new Vector3(0, 5, 3), Width / (float)Height);
 
             CursorVisible = false;
             this.isMouseCentered = true;
@@ -111,9 +109,8 @@ namespace skystride.vendor
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref viewMatrix);
 
-            /* RENDER AREA */
-            grid.Render();
-            /* END RENDER AREA */
+            TemplateScene scene = new TemplateScene();
+            scene.Render();
 
             SwapBuffers();
         }

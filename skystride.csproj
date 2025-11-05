@@ -47,9 +47,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="objects\CheckboardTerrain.cs" />
     <Compile Include="objects\templates\Grid.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="scenes\TemplateScene.cs" />
     <Compile Include="vendor\Camera.cs" />
     <Compile Include="vendor\Engine.cs" />
   </ItemGroup>
