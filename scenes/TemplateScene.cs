@@ -12,11 +12,13 @@ namespace skystride.scenes
     {
         Grid grid = new Grid();
         CheckboardTerrain terrain = new CheckboardTerrain();
-
+        Cube cube = new Cube();
+        
         public void Render()
         {
             grid.Render();
             terrain.Render();
+            cube.Render();
         }
     }
 }
