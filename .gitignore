@@ -1,4 +1,4 @@
-.git
-.vs
 bin
+debug
+.vs
 obj
