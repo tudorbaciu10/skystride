@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using skystride.objects.templates;
 using skystride.scenes;
+using skystride.shaders;
 
 namespace skystride.vendor
 {
@@ -26,10 +27,16 @@ namespace skystride.vendor
         private bool isMouseCentered = false;
         private Vector2 latestMousePosition;
 
+        // shader instances
+        private Fog fog;
+
         // init engine window
         public Engine() : base(800, 600, new GraphicsMode(32, 24, 0, 8))
         {
             VSync = VSyncMode.On;
+
+            Title = "Skystride Engine";
+            WindowState = WindowState.Maximized;
         }
 
         // on load event
@@ -48,6 +55,8 @@ namespace skystride.vendor
 
             camera = new Camera(new Vector3(0, 5, 3), Width / (float)Height);
             cameraPhysics = new CameraPhysics(camera);
+
+            fog = new Fog(Color.LightBlue, FogMode.Exp2, 0.02f, 30f, 250f);
 
             CursorVisible = false;
             this.isMouseCentered = true;
@@ -83,7 +92,7 @@ namespace skystride.vendor
                 this.isMouseCentered = false;
             }
 
-            if(currentMouseState.LeftButton == ButtonState.Pressed)
+            if (currentMouseState.LeftButton == ButtonState.Pressed)
             {
                 CursorVisible = false;
                 this.isMouseCentered = true;
@@ -108,9 +117,11 @@ namespace skystride.vendor
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            Matrix4 viewMatrix = camera.GetViewMatrix();
+            Matrix4 viewMatrix = this.camera.GetViewMatrix();
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref viewMatrix);
+
+            this.fog.Render();
 
             TemplateScene scene = new TemplateScene();
             scene.Render();
