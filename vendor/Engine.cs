@@ -87,7 +87,7 @@ namespace skystride.vendor
                 CursorVisible = true;
                 this.isMouseCentered = false;
 
-                Exit();
+                //Exit();
             }
 
             if (currentMouseState.LeftButton == ButtonState.Pressed)

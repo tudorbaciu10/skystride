@@ -16,6 +16,7 @@ namespace skystride.scenes
         Cube cube = new Cube();
 
         private static readonly Model frog = new Model("/assets/models/frog.obj", "/assets/models/frog.jpg");
+        private static readonly Model iashik = new Model("/assets/models/iashik.obj", "/assets/models/iashik.jpg");
 
         public void Render()
         {
@@ -23,6 +24,7 @@ namespace skystride.scenes
             terrain.Render();
             cube.Render();
             frog.Render(new OpenTK.Vector3(5f, 0.7f, 0), 0.4f, -90f, 0f, -150f);
+            iashik.Render(new OpenTK.Vector3(-5f, 0.7f, 0), 3f, -90f, 0f, -150f);
         }
     }
 }
