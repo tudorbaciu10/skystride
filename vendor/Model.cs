@@ -29,7 +29,7 @@ namespace skystride.vendor
         private string detectedTexturePath;
         private bool hasTexcoords;
 
-        public Model(string objectPath, string objectPathTexture)
+        public Model(string objectPath, string objectPathTexture = "assets/textures/undefined.jpg")
         {
             SourcePath = Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName, objectPath.TrimStart('/', '\\'));
             detectedTexturePath = Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName, objectPathTexture.TrimStart('/', '\\'));
