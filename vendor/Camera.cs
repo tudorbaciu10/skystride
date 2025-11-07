@@ -40,7 +40,7 @@ namespace skystride.vendor
         private Vector3 velocity; // current velocity
         private bool isGrounded = false; // grounded flag
 
-        private bool physicsEnabled = true; // toggle for physics vs free-fly
+        private bool physicsEnabled = false; // toggle for physics vs free-fly
 
         public Camera(Vector3 _position, float _aspectRatio)
         {
@@ -95,8 +95,17 @@ namespace skystride.vendor
                 if (current.IsKeyDown(Key.D)) dir += right; // right
                 if (current.IsKeyDown(Key.A)) dir -= right; // left
                 if (current.IsKeyDown(Key.Space)) dir += Vector3.UnitY; // up
-                if (current.IsKeyDown(Key.ShiftLeft) || current.IsKeyDown(Key.ShiftRight) || current.IsKeyDown(Key.ControlLeft) || current.IsKeyDown(Key.ControlRight)) dir -= Vector3.UnitY; // down
-                if (dir.LengthSquared >0f)
+                if (current.IsKeyDown(Key.ControlLeft)) dir -= Vector3.UnitY; // down
+
+                if (current.IsKeyDown(Key.ShiftLeft))
+                {
+                    this.moveSpeed = 12.0f; // sprint
+                } else
+                {
+                    this.moveSpeed = 6.0f; // normal speed
+                }
+
+                if (dir.LengthSquared > 0f)
                 {
                     dir.NormalizeFast();
                     position += dir * moveSpeed * dt;
