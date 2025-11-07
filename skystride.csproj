@@ -55,7 +55,6 @@
     <Compile Include="scenes\TemplateScene.cs" />
     <Compile Include="shaders\Fog.cs" />
     <Compile Include="vendor\Camera.cs" />
-    <Compile Include="vendor\CameraPhysics.cs" />
     <Compile Include="vendor\Engine.cs" />
   </ItemGroup>
   <ItemGroup>

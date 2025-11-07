@@ -22,7 +22,6 @@ namespace skystride.vendor
 
         // main instances
         Camera camera;
-        private CameraPhysics cameraPhysics;
         private bool firstCameraMove = true;
         private bool isMouseCentered = false;
         private Vector2 latestMousePosition;
@@ -54,7 +53,6 @@ namespace skystride.vendor
             GL.Enable(EnableCap.LineSmooth);
 
             camera = new Camera(new Vector3(0, 5, 3), Width / (float)Height);
-            cameraPhysics = new CameraPhysics(camera);
 
             fog = new Fog(Color.LightBlue, FogMode.Exp2, 0.02f, 30f, 250f);
 
@@ -104,7 +102,7 @@ namespace skystride.vendor
                 camera.UpdateMouseState(this.currentMouseState);
             }
 
-            cameraPhysics.Update(currentKeyboardState, previousKeyboardState, (float)e.Time);
+            camera.UpdatePhysics(currentKeyboardState, previousKeyboardState, (float)e.Time);
 
             this.previousKeyboardState = this.currentKeyboardState;
             this.previousMouseState = this.currentMouseState;

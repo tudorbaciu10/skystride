@@ -11,7 +11,7 @@ namespace skystride.vendor
 {
     internal class Camera
     {
-        // instances
+        // transform vectors
         public Vector3 position { get; private set; }
         public Vector3 front { get; private set; } = -Vector3.UnitZ;
         public Vector3 up { get; private set; } = Vector3.UnitY;
@@ -20,22 +20,30 @@ namespace skystride.vendor
         // euler rotations
         private float yaw = -90.0f;
         private float pitch = 0.0f;
-
-        private float speed = 5f;
-
         private float sensitivity = 0.2f;
 
+        // projection
         private float fov = 60.0f;
         private float aspectRatio;
 
+        // mouse state
         private bool firstMoveState = true;
         private Vector2 latestMousePosition;
+
+        // physics fields
+        private float moveSpeed = 6.0f; // horizontal move speed (m/s)
+        private float jumpSpeed = 6.5f; // initial jump velocity
+        private float gravity = -18.0f; // gravity acceleration (m/s^2)
+        private float groundY = 0.0f; // flat ground plane at Y=0
+        private float damping = 8.0f; // air damping for horizontal velocity blending
+        private float eyeHeight = 1.7f; // eye height above ground
+        private Vector3 velocity; // current velocity
+        private bool isGrounded = false; // grounded flag
 
         public Camera(Vector3 _position, float _aspectRatio)
         {
             this.position = _position;
             this.aspectRatio = _aspectRatio;
-
             this.UpdateVectors();
         }
 
@@ -46,27 +54,10 @@ namespace skystride.vendor
 
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(this.fov), this.aspectRatio, 0.1f, 1000f);
+            return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(this.fov), this.aspectRatio,0.1f,1000f);
         }
 
-        public void UpdateKeyboardState(KeyboardState _currentKeyboardState, float deltaTime)
-        {
-            float velocity = speed * deltaTime;
-
-            if (_currentKeyboardState.IsKeyDown(Key.W))
-                this.position += this.front * velocity;
-            if (_currentKeyboardState.IsKeyDown(Key.S))
-                this.position -= this.front * velocity;
-            if (_currentKeyboardState.IsKeyDown(Key.A))
-                this.position -= this.right * velocity;
-            if (_currentKeyboardState.IsKeyDown(Key.D))
-                this.position += this.right * velocity;
-            if (_currentKeyboardState.IsKeyDown(Key.Space))
-                this.position += this.up * velocity;
-            if (_currentKeyboardState.IsKeyDown(Key.ControlLeft))
-                this.position -= this.up * velocity;
-        }
-
+        // Mouse look
         public void UpdateMouseState(MouseState _currentMouseState)
         {
             Vector2 _mousePosition = new Vector2(_currentMouseState.X, _currentMouseState.Y);
@@ -84,9 +75,64 @@ namespace skystride.vendor
             this.yaw += deltaX * this.sensitivity;
             this.pitch -= deltaY * this.sensitivity;
 
-            pitch = MathHelper.Clamp(this.pitch, -89f, 89f);
+            pitch = MathHelper.Clamp(this.pitch, -89f,89f);
 
             UpdateVectors();
+        }
+
+        public void UpdatePhysics(KeyboardState current, KeyboardState previous, float dt)
+        {
+            if (dt <=0f) return;
+
+            // planar movement basis
+            Vector3 forward = front; forward.Y =0f; if (forward.LengthSquared >0f) forward.NormalizeFast();
+            Vector3 rightVec = right; rightVec.Y =0f; if (rightVec.LengthSquared >0f) rightVec.NormalizeFast();
+
+            // desired direction
+            Vector3 wishDir = Vector3.Zero;
+            if (current.IsKeyDown(Key.W)) wishDir += forward;
+            if (current.IsKeyDown(Key.S)) wishDir -= forward;
+            if (current.IsKeyDown(Key.D)) wishDir += rightVec;
+            if (current.IsKeyDown(Key.A)) wishDir -= rightVec;
+            if (wishDir.LengthSquared >0f) wishDir.NormalizeFast();
+
+            // horizontal velocity smoothing
+            Vector3 targetHorizontalVel = wishDir * moveSpeed;
+            Vector3 currentHorizontalVel = new Vector3(velocity.X,0f, velocity.Z);
+            float t =1f - (float)Math.Exp(-damping * dt);
+            Vector3 newHorizontalVel = currentHorizontalVel + (targetHorizontalVel - currentHorizontalVel) * t;
+            velocity.X = newHorizontalVel.X;
+            velocity.Z = newHorizontalVel.Z;
+
+            // jumping (edge trigger)
+            bool jumpPressed = current.IsKeyDown(Key.Space) && !previous.IsKeyDown(Key.Space);
+            if (jumpPressed && isGrounded)
+            {
+                velocity.Y = jumpSpeed;
+                isGrounded = false;
+            }
+
+            // gravity
+            velocity.Y += gravity * dt;
+
+            // integrate
+            Vector3 pos = position;
+            pos += velocity * dt;
+
+            // ground collision
+            float minY = groundY + eyeHeight;
+            if (pos.Y <= minY)
+            {
+                pos.Y = minY;
+                if (velocity.Y <0f) velocity.Y =0f;
+                isGrounded = true;
+            }
+            else
+            {
+                isGrounded = false;
+            }
+
+            position = pos;
         }
 
         private void UpdateVectors()
