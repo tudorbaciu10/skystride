@@ -68,7 +68,6 @@ namespace skystride.vendor
             {
                 string line;
 
-                // Build indexed vertex buffer based on unique (v, vt, vn) combinations
                 var vertMap = new Dictionary<string, int>();
 
                 while ((line = sr.ReadLine()) != null)
@@ -88,7 +87,6 @@ namespace skystride.vendor
                     else if (line.StartsWith("vt "))
                     {
                         var p = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        // Note: invert V to match OpenGL texture coordinate convention for many images
                         float u = float.Parse(p[1], CultureInfo.InvariantCulture);
                         float v = float.Parse(p[2], CultureInfo.InvariantCulture);
                         tempTex.Add(new Vector2(u, 1f - v));
@@ -112,7 +110,6 @@ namespace skystride.vendor
                     else if (line.StartsWith("f "))
                     {
                         var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        // Triangulate polygons fan-style
                         for (int i = 1; i < parts.Length - 2; i++)
                         {
                             AddVertexFromToken(parts[1], tempPositions, tempTex, tempNormals, vertMap);
@@ -123,7 +120,6 @@ namespace skystride.vendor
                 }
             }
 
-            // If we collected no normals at the vertex level, clear normals list to trigger compute
             bool allNormalsZero = true;
             for (int i = 0; i < normals.Count; i++)
             {
@@ -203,14 +199,13 @@ namespace skystride.vendor
                             if (parts.Length == 2)
                             {
                                 var candidate = parts[1].Trim();
-                                // handle paths with spaces by trimming quotes
                                 candidate = candidate.Trim('"');
                                 string dir = Path.GetDirectoryName(mtlPath) ?? string.Empty;
                                 string full = Path.Combine(dir, candidate);
                                 if (File.Exists(full))
                                 {
                                     detectedTexturePath = full;
-                                    return; // use the first map_Kd found
+                                    return;
                                 }
                             }
                         }
@@ -344,7 +339,6 @@ namespace skystride.vendor
 
                 using (var bmp = new Bitmap(pathToUse))
                 {
-                    // Ensure32bpp ARGB for predictable upload
                     var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
                     var data = bmp.LockBits(rect, ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                     GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
@@ -379,6 +373,8 @@ namespace skystride.vendor
             if (rotZ != 0f) GL.Rotate(rotZ, 0f, 0f, 1f);
             GL.Scale(scale, scale, scale);
             GL.Translate(-center);
+
+            GL.Color3(1f, 1f, 1f);
 
             GL.EnableClientState(ArrayCap.VertexArray);
             GL.EnableClientState(ArrayCap.NormalArray);
