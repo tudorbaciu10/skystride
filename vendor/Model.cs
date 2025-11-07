@@ -1,144 +1,207 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
-using System.Drawing;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace skystride.vendor
 {
-    internal class Model
+    internal class Model : IDisposable
     {
+        private int vbo, nbo, ebo;
+        private int indexCount;
+
         private List<Vector3> vertices = new List<Vector3>();
-        private List<int[]> faces = new List<int[]>();
+        private List<Vector3> normals = new List<Vector3>();
+        private List<int> indices = new List<int>();
+
+        private Vector3 minBound, maxBound, center, size;
         public bool Loaded { get; private set; }
         public string SourcePath { get; private set; }
-
-        private Vector3 minBound = Vector3.Zero;
-        private Vector3 maxBound = Vector3.Zero;
-        private Vector3 center = Vector3.Zero;
-        private Vector3 size = Vector3.Zero;
-
-        public float BBoxHeight { get { return size.Y; } }
         public Vector3 Center { get { return center; } }
+        public float BBoxHeight { get { return size.Y; } }
 
         public Model(string path)
         {
-            path = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName + path;
+            SourcePath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName + path;
 
             try
             {
-                LoadModel(path);
-
-                if (vertices.Count > 0)
-                {
-                    minBound = vertices[0];
-                    maxBound = vertices[0];
-                    foreach (var v in vertices)
-                    {
-                        minBound = new Vector3(Math.Min(minBound.X, v.X), Math.Min(minBound.Y, v.Y), Math.Min(minBound.Z, v.Z));
-                        maxBound = new Vector3(Math.Max(maxBound.X, v.X), Math.Max(maxBound.Y, v.Y), Math.Max(maxBound.Z, v.Z));
-                    }
-                    center = (minBound + maxBound) * 0.5f;
-                    size = maxBound - minBound;
-                }
-
+                LoadOBJ(SourcePath);
+                if (normals.Count == 0)
+                    ComputeNormals();
+                ComputeBounds();
+                UploadToGPU();
                 Loaded = true;
 
-                Console.WriteLine($"Model loaded: {path} ({vertices.Count} vertices, {faces.Count} faces)");
+                Console.WriteLine("[Model] Loaded {0} ({1} vertices, {2} faces)",
+                    Path.GetFileName(SourcePath), vertices.Count, indexCount / 3);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("[Model] Failed to load {0}: {1}", SourcePath, ex.Message);
                 Loaded = false;
-
-                Console.WriteLine($"Failed to load model: {path}");
             }
         }
 
-        private void LoadModel(string path)
+        private void LoadOBJ(string path)
         {
-            if (!File.Exists(path)) throw new FileNotFoundException(path);
-
             using (var sr = new StreamReader(path))
             {
                 string line;
+                var tempNormals = new List<Vector3>();
+
                 while ((line = sr.ReadLine()) != null)
                 {
                     line = line.Trim();
-                    if (line.Length == 0) continue;
+                    if (line.Length == 0 || line.StartsWith("#"))
+                        continue;
+
                     if (line.StartsWith("v "))
                     {
-                        var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 4)
-                        {
-                            float x = float.Parse(parts[1], CultureInfo.InvariantCulture);
-                            float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
-                            float z = float.Parse(parts[3], CultureInfo.InvariantCulture);
-                            vertices.Add(new Vector3(x, y, z));
-                        }
+                        var p = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        vertices.Add(new Vector3(
+                            float.Parse(p[1], CultureInfo.InvariantCulture),
+                            float.Parse(p[2], CultureInfo.InvariantCulture),
+                            float.Parse(p[3], CultureInfo.InvariantCulture)));
+                    }
+                    else if (line.StartsWith("vn "))
+                    {
+                        var p = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        tempNormals.Add(new Vector3(
+                            float.Parse(p[1], CultureInfo.InvariantCulture),
+                            float.Parse(p[2], CultureInfo.InvariantCulture),
+                            float.Parse(p[3], CultureInfo.InvariantCulture)));
                     }
                     else if (line.StartsWith("f "))
                     {
                         var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        List<int> idx = new List<int>();
-                        for (int i = 1; i < parts.Length; i++)
+                        for (int i = 1; i < parts.Length - 2; i++)
                         {
-                            var v = parts[i];
-                            var vparts = v.Split('/');
-                            int vi = int.Parse(vparts[0], CultureInfo.InvariantCulture);
-                            if (vi < 0) vi = vertices.Count + vi + 1;
-                            idx.Add(vi - 1);
-                        }
-                        if (idx.Count >= 3)
-                        {
-                            for (int i = 1; i < idx.Count - 1; i++)
-                            {
-                                faces.Add(new int[] { idx[0], idx[i], idx[i + 1] });
-                            }
+                            ParseFace(parts[1], tempNormals);
+                            ParseFace(parts[i + 1], tempNormals);
+                            ParseFace(parts[i + 2], tempNormals);
                         }
                     }
                 }
             }
         }
 
-        public void Render(Vector3 position, float scale = 1f, float rotX = 0f, float rotY = 0f, float rotZ = 0f)
+        private void ParseFace(string token, List<Vector3> tempNormals)
+        {
+            var parts = token.Split('/');
+            int vi = int.Parse(parts[0], CultureInfo.InvariantCulture) - 1;
+            indices.Add(vi);
+
+            if (parts.Length >= 3 && parts[2] != "")
+            {
+                int ni = int.Parse(parts[2], CultureInfo.InvariantCulture) - 1;
+                while (normals.Count <= vi) normals.Add(Vector3.Zero);
+                normals[vi] = tempNormals[ni];
+            }
+        }
+
+        private void ComputeNormals()
+        {
+            normals = new List<Vector3>(new Vector3[vertices.Count]);
+            for (int i = 0; i < indices.Count; i += 3)
+            {
+                int i0 = indices[i], i1 = indices[i + 1], i2 = indices[i + 2];
+                Vector3 v0 = vertices[i0];
+                Vector3 v1 = vertices[i1];
+                Vector3 v2 = vertices[i2];
+                Vector3 n = Vector3.Cross(v1 - v0, v2 - v0);
+                n.Normalize();
+                normals[i0] += n;
+                normals[i1] += n;
+                normals[i2] += n;
+            }
+            for (int i = 0; i < normals.Count; i++)
+            {
+                if (normals[i].LengthSquared > 0)
+                    normals[i].Normalize();
+            }
+        }
+
+        private void ComputeBounds()
+        {
+            if (vertices.Count == 0) return;
+            minBound = maxBound = vertices[0];
+            foreach (var v in vertices)
+            {
+                minBound = Vector3.ComponentMin(minBound, v);
+                maxBound = Vector3.ComponentMax(maxBound, v);
+            }
+            center = (minBound + maxBound) * 0.5f;
+            size = maxBound - minBound;
+        }
+
+        private void UploadToGPU()
+        {
+            int[] buffers = new int[3];
+            GL.GenBuffers(3, buffers);
+            vbo = buffers[0];
+            nbo = buffers[1];
+            ebo = buffers[2];
+
+            // Vertices
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferData(BufferTarget.ArrayBuffer,
+                (IntPtr)(vertices.Count * Vector3.SizeInBytes),
+                vertices.ToArray(), BufferUsageHint.StaticDraw);
+
+            // Normals
+            GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
+            GL.BufferData(BufferTarget.ArrayBuffer,
+                (IntPtr)(normals.Count * Vector3.SizeInBytes),
+                normals.ToArray(), BufferUsageHint.StaticDraw);
+
+            // Indices
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
+            GL.BufferData(BufferTarget.ElementArrayBuffer,
+                (IntPtr)(indices.Count * sizeof(int)),
+                indices.ToArray(), BufferUsageHint.StaticDraw);
+
+            indexCount = indices.Count;
+        }
+
+        public void Render(Vector3 position, float scale, float rotX, float rotY, float rotZ)
         {
             if (!Loaded) return;
 
             GL.PushMatrix();
             GL.Translate(position);
-
             if (rotX != 0f) GL.Rotate(rotX, 1f, 0f, 0f);
             if (rotY != 0f) GL.Rotate(rotY, 0f, 1f, 0f);
             if (rotZ != 0f) GL.Rotate(rotZ, 0f, 0f, 1f);
+            GL.Scale(scale, scale, scale);
+            GL.Translate(-center);
 
-            if (scale != 1f) GL.Scale(scale, scale, scale);
+            GL.EnableClientState(ArrayCap.VertexArray);
+            GL.EnableClientState(ArrayCap.NormalArray);
 
-            GL.Color3(Color.MediumPurple);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.VertexPointer(3, VertexPointerType.Float, 0, IntPtr.Zero);
 
-            GL.Begin(PrimitiveType.Triangles);
-            for (int i = 0; i < faces.Count; i++)
-            {
-                var f = faces[i];
-                Vector3 v0 = vertices[f[0]] - center;
-                Vector3 v1 = vertices[f[1]] - center;
-                Vector3 v2 = vertices[f[2]] - center;
+            GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
+            GL.NormalPointer(NormalPointerType.Float, 0, IntPtr.Zero);
 
-                Vector3 n = Vector3.Cross(v1 - v0, v2 - v0);
-                if (n.LengthSquared > 0f) n.NormalizeFast();
-                GL.Normal3(n);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
+            GL.DrawElements(PrimitiveType.Triangles, indexCount,
+                DrawElementsType.UnsignedInt, IntPtr.Zero);
 
-                GL.Vertex3(v0);
-                GL.Vertex3(v1);
-                GL.Vertex3(v2);
-            }
-            GL.End();
+            GL.DisableClientState(ArrayCap.VertexArray);
+            GL.DisableClientState(ArrayCap.NormalArray);
 
             GL.PopMatrix();
+        }
+
+        public void Dispose()
+        {
+            if (vbo != 0) GL.DeleteBuffer(vbo);
+            if (nbo != 0) GL.DeleteBuffer(nbo);
+            if (ebo != 0) GL.DeleteBuffer(ebo);
         }
     }
 }
