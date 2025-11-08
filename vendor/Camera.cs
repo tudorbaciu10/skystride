@@ -31,16 +31,24 @@ namespace skystride.vendor
         private Vector2 latestMousePosition;
 
         // physics fields
-        private float moveSpeed = 6.0f; // horizontal move speed (m/s)
+        private float moveSpeed = 6.0f; // base desired speed
+        private float sprintMultiplier = 2.0f;
         private float jumpSpeed = 6.5f; // initial jump velocity
         private float gravity = -18.0f; // gravity acceleration (m/s^2)
         private float groundY = 0.0f; // flat ground plane at Y=0
-        private float damping = 8.0f; // air damping for horizontal velocity blending
         private float eyeHeight = 1.7f; // eye height above ground
+
+        private float groundAccel = 60.0f; // ground acceleration
+        private float airAccel = 15.0f; // air acceleration when moving forward/back
+        private float sideStrafeAccel = 50.0f; // acceleration when only strafing in air
+        private float sideStrafeSpeed = 2.0f; // target wishspeed when side-strafing in air
+        private float friction = 6.0f; // ground friction
+        private float stopSpeed = 1.0f; // minimum speed considered for friction control
+
         private Vector3 velocity; // current velocity
         private bool isGrounded = false; // grounded flag
 
-        private bool physicsEnabled = false; // toggle for physics vs free-fly
+        private bool physicsEnabled = false;
 
         public Camera(Vector3 _position, float _aspectRatio)
         {
@@ -56,7 +64,7 @@ namespace skystride.vendor
 
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(this.fov), this.aspectRatio,0.1f,1000f);
+            return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(this.fov), this.aspectRatio, 0.1f, 1000f);
         }
 
         // Mouse look
@@ -77,14 +85,14 @@ namespace skystride.vendor
             this.yaw += deltaX * this.sensitivity;
             this.pitch -= deltaY * this.sensitivity;
 
-            pitch = MathHelper.Clamp(this.pitch, -89f,89f);
+            pitch = MathHelper.Clamp(this.pitch, -89f, 89f);
 
             UpdateVectors();
         }
 
         public void UpdatePhysics(KeyboardState current, KeyboardState previous, float dt)
         {
-            if (dt <=0f) return;
+            if (dt <= 0f) return;
 
             // Free-fly mode (no gravity / physics constraints)
             if (!physicsEnabled)
@@ -97,51 +105,80 @@ namespace skystride.vendor
                 if (current.IsKeyDown(Key.Space)) dir += Vector3.UnitY; // up
                 if (current.IsKeyDown(Key.ControlLeft)) dir -= Vector3.UnitY; // down
 
-                if (current.IsKeyDown(Key.ShiftLeft))
-                {
-                    this.moveSpeed = 12.0f; // sprint
-                } else
-                {
-                    this.moveSpeed = 6.0f; // normal speed
-                }
+                float speed = moveSpeed * (current.IsKeyDown(Key.ShiftLeft) ? sprintMultiplier : 1f);
 
                 if (dir.LengthSquared > 0f)
                 {
                     dir.NormalizeFast();
-                    position += dir * moveSpeed * dt;
+                    position += dir * speed * dt;
                 }
-                return; // skip physics section
+                return;
             }
 
             // planar movement basis
-            Vector3 forward = front; forward.Y =0f; if (forward.LengthSquared >0f) forward.NormalizeFast();
-            Vector3 rightVec = right; rightVec.Y =0f; if (rightVec.LengthSquared >0f) rightVec.NormalizeFast();
+            Vector3 forward = front; forward.Y = 0f; if (forward.LengthSquared > 0f) forward.NormalizeFast();
+            Vector3 rightVec = right; rightVec.Y = 0f; if (rightVec.LengthSquared > 0f) rightVec.NormalizeFast();
 
-            // desired direction
+            // desired input direction (wishdir)
             Vector3 wishDir = Vector3.Zero;
-            if (current.IsKeyDown(Key.W)) wishDir += forward;
-            if (current.IsKeyDown(Key.S)) wishDir -= forward;
-            if (current.IsKeyDown(Key.D)) wishDir += rightVec;
-            if (current.IsKeyDown(Key.A)) wishDir -= rightVec;
-            if (wishDir.LengthSquared >0f) wishDir.NormalizeFast();
+            bool fwd = current.IsKeyDown(Key.W);
+            bool back = current.IsKeyDown(Key.S);
+            bool rightKey = current.IsKeyDown(Key.D);
+            bool leftKey = current.IsKeyDown(Key.A);
+            if (fwd) wishDir += forward;
+            if (back) wishDir -= forward;
+            if (rightKey) wishDir += rightVec;
+            if (leftKey) wishDir -= rightVec;
+            if (wishDir.LengthSquared > 0f) wishDir.NormalizeFast();
 
-            // horizontal velocity smoothing
-            Vector3 targetHorizontalVel = wishDir * moveSpeed;
-            Vector3 currentHorizontalVel = new Vector3(velocity.X,0f, velocity.Z);
-            float t =1f - (float)Math.Exp(-damping * dt);
-            Vector3 newHorizontalVel = currentHorizontalVel + (targetHorizontalVel - currentHorizontalVel) * t;
-            velocity.X = newHorizontalVel.X;
-            velocity.Z = newHorizontalVel.Z;
+            // sprint modifies target speed
+            float targetSpeed = moveSpeed * (current.IsKeyDown(Key.ShiftLeft) ? sprintMultiplier : 1f);
 
-            // jumping (edge trigger)
             bool jumpPressed = current.IsKeyDown(Key.Space) && !previous.IsKeyDown(Key.Space);
-            if (jumpPressed && isGrounded)
+            bool jumpHeld = current.IsKeyDown(Key.Space);
+
+            // ground handling
+            if (isGrounded)
             {
-                velocity.Y = jumpSpeed;
-                isGrounded = false;
+                ApplyFriction(ref velocity, dt);
+
+                if (wishDir.LengthSquared > 0f)
+                {
+                    Accelerate(ref velocity, wishDir, targetSpeed, groundAccel, dt);
+                }
+
+                if (jumpPressed || (jumpHeld))
+                {
+                    // jump impulse upward
+                    velocity.Y = jumpSpeed;
+
+                    Vector3 jumpPushDir = forward;
+                    if (jumpPushDir.LengthSquared > 0f)
+                    {
+                        float push = Math.Max(1.0f, targetSpeed * 0.1f); // configurable push
+                        velocity.X += jumpPushDir.X * push;
+                        velocity.Z += jumpPushDir.Z * push;
+                    }
+
+                    isGrounded = false;
+                }
+            }
+            else
+            {
+                // air control and strafing
+                if (wishDir.LengthSquared > 0f)
+                {
+                    bool onlyStrafe = !fwd && !back && (leftKey ^ rightKey);
+                    float accel = onlyStrafe ? sideStrafeAccel : airAccel;
+                    float wishSpeed = onlyStrafe ? sideStrafeSpeed : targetSpeed;
+                    Accelerate(ref velocity, wishDir, wishSpeed, accel, dt);
+                }
+
+                // optional very small air drag to stabilize
+                //velocity.X *=1f; velocity.Z *=1f;
             }
 
-            // gravity
+            // gravity always
             velocity.Y += gravity * dt;
 
             // integrate
@@ -153,7 +190,7 @@ namespace skystride.vendor
             if (pos.Y <= minY)
             {
                 pos.Y = minY;
-                if (velocity.Y <0f) velocity.Y =0f;
+                if (velocity.Y < 0f) velocity.Y = 0f;
                 isGrounded = true;
             }
             else
@@ -162,6 +199,36 @@ namespace skystride.vendor
             }
 
             position = pos;
+        }
+
+        private void Accelerate(ref Vector3 vel, Vector3 wishDir, float wishSpeed, float accel, float dt)
+        {
+            float currentSpeed = Vector3.Dot(new Vector3(vel.X, 0f, vel.Z), wishDir);
+            float addSpeed = wishSpeed - currentSpeed;
+            if (addSpeed <= 0f) return;
+            float accelSpeed = accel * wishSpeed * dt;
+            if (accelSpeed > addSpeed) accelSpeed = addSpeed;
+            vel.X += wishDir.X * accelSpeed;
+            vel.Z += wishDir.Z * accelSpeed;
+        }
+
+        private void ApplyFriction(ref Vector3 vel, float dt)
+        {
+            Vector3 lateral = new Vector3(vel.X, 0f, vel.Z);
+            float speed = lateral.Length;
+            if (speed <= 0.0001f) return;
+
+            float control = speed < stopSpeed ? stopSpeed : speed;
+            float drop = control * friction * dt;
+
+            float newSpeed = speed - drop;
+            if (newSpeed < 0f) newSpeed = 0f;
+            if (newSpeed != speed)
+            {
+                newSpeed /= speed;
+                vel.X *= newSpeed;
+                vel.Z *= newSpeed;
+            }
         }
 
         private void UpdateVectors()
