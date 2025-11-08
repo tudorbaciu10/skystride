@@ -50,8 +50,12 @@
     <Compile Include="objects\CheckboardTerrain.cs" />
     <Compile Include="objects\templates\Cube.cs" />
     <Compile Include="objects\templates\Grid.cs" />
+    <Compile Include="objects\templates\Plane.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="scenes\ArcticScene.cs" />
+    <Compile Include="vendor\scenes\GlobalScene.cs" />
+    <Compile Include="vendor\scenes\ISceneEntity.cs" />
     <Compile Include="scenes\TemplateScene.cs" />
     <Compile Include="shaders\Fog.cs" />
     <Compile Include="vendor\Camera.cs" />

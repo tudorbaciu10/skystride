@@ -2,10 +2,11 @@
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Drawing;
+using skystride.scenes;
 
 namespace skystride.objects
 {
-    internal class CheckboardTerrain
+    internal class CheckboardTerrain : ISceneEntity
     {
         private readonly int tiles;
         private readonly float size;

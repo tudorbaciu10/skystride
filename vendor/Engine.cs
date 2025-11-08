@@ -27,6 +27,9 @@ namespace skystride.vendor
         // shader instances
         private Fog fog;
 
+        // scene instance
+        private GlobalScene activeScene;
+
         // init engine window
         public Engine() : base(800, 600, new GraphicsMode(32, 24, 0, 8))
         {
@@ -54,8 +57,17 @@ namespace skystride.vendor
 
             fog = new Fog(Color.LightBlue, FogMode.Exp2, 0.02f, 30f, 250f);
 
+            activeScene = new ArcticScene();
+            //activeScene = new TemplateScene();
+
             CursorVisible = false;
             this.isMouseCentered = true;
+        }
+
+        protected override void OnUnload(EventArgs e)
+        {
+            base.OnUnload(e);
+            activeScene?.Dispose();
         }
 
         // on resize event
@@ -121,8 +133,7 @@ namespace skystride.vendor
 
             this.fog.Render();
 
-            TemplateScene scene = new TemplateScene();
-            scene.Render();
+            activeScene?.Render();
 
             SwapBuffers();
         }

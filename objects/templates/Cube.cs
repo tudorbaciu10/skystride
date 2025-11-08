@@ -1,10 +1,11 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
+using skystride.scenes;
 
 namespace skystride.objects.templates
 {
-    internal class Cube
+    internal class Cube : ISceneEntity
     {
         private Vector3 position;
         private float size;

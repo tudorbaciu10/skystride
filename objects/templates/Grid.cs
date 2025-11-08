@@ -6,10 +6,11 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using skystride.scenes;
 
 namespace skystride.objects.templates
 {
-    internal class Grid
+    internal class Grid : ISceneEntity
     {
         private readonly Color color;
         private const int STEP = 20;
