@@ -10,7 +10,6 @@ namespace skystride.scenes
         // Unified list for all entities
         protected readonly List<ISceneEntity> Entities = new List<ISceneEntity>();
 
-        // Model entity with transform; other primitives can directly implement ISceneEntity themselves
         protected sealed class ModelEntity : ISceneEntity, IDisposable
         {
             private readonly Model _model;
@@ -32,12 +31,11 @@ namespace skystride.scenes
             }
         }
 
-        // Single generic add method
         protected void AddEntity(ISceneEntity entity) => Entities.Add(entity);
 
         public virtual void Render()
         {
-            for (int i =0; i < Entities.Count; i++)
+            for (int i = 0; i < Entities.Count; i++)
             {
                 Entities[i].Render();
             }
@@ -45,7 +43,7 @@ namespace skystride.scenes
 
         public virtual void Dispose()
         {
-            for (int i =0; i < Entities.Count; i++)
+            for (int i = 0; i < Entities.Count; i++)
             {
                 var disp = Entities[i] as IDisposable;
                 if (disp != null)
