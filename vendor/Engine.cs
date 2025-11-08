@@ -44,7 +44,7 @@ namespace skystride.vendor
         {
             base.OnLoad(e);
 
-            GL.ClearColor(Color.LightBlue);
+            GL.ClearColor(Color.DarkBlue);
 
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
@@ -55,10 +55,10 @@ namespace skystride.vendor
 
             camera = new Camera(new Vector3(0, 5, 3), Width / (float)Height);
 
-            fog = new Fog(Color.LightBlue, FogMode.Exp2, 0.02f, 30f, 250f);
+            fog = new Fog(Color.DarkBlue, FogMode.Exp2, 0.02f, 30f, 250f);
 
-            //activeScene = new ArcticScene();
-            activeScene = new TemplateScene();
+            activeScene = new ArcticScene();
+            //activeScene = new TemplateScene();
 
             CursorVisible = false;
             this.isMouseCentered = true;

@@ -54,6 +54,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="scenes\ArcticScene.cs" />
+    <Compile Include="shaders\Snow.cs" />
     <Compile Include="vendor\GlobalScene.cs" />
     <Compile Include="interfaces\ISceneEntity.cs" />
     <Compile Include="scenes\TemplateScene.cs" />
