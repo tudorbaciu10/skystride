@@ -35,10 +35,9 @@ namespace skystride.scenes
 
         public void testAABB(Camera _camera, Cube _cube)
         {
-            AABB cameraAABB = new AABB(_camera.position, new Vector3(1f, 2f, 1f));
             AABB cubeAABB = new AABB(_cube.GetPosition(), new Vector3(_cube.GetSize(), _cube.GetSize(), _cube.GetSize()));
 
-            bool isColliding = cameraAABB.Intersects(cubeAABB);
+            bool isColliding = _camera.Hitbox().Intersects(cubeAABB);
             Console.WriteLine("Collision Detected: " + isColliding);
         }
 

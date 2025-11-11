@@ -1,5 +1,6 @@
 ﻿using OpenTK;
 using OpenTK.Input;
+using skystride.vendor.collision;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -48,6 +49,8 @@ namespace skystride.vendor
         private Vector3 velocity; // current velocity
         private bool isGrounded = false; // grounded flag
 
+        private float hitboxSize = 1f;
+
         private bool physicsEnabled = false;
 
         public Camera(Vector3 _position, float _aspectRatio)
@@ -65,6 +68,11 @@ namespace skystride.vendor
         public Matrix4 GetProjectionMatrix()
         {
             return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(this.fov), this.aspectRatio, 0.1f, 1000f);
+        }
+
+        public AABB Hitbox()
+        {
+            return new AABB(this.position, new Vector3(this.hitboxSize, 2f, this.hitboxSize));
         }
 
         // Mouse look
