@@ -64,6 +64,7 @@
     <Compile Include="vendor\Camera.cs" />
     <Compile Include="vendor\Engine.cs" />
     <Compile Include="vendor\Model.cs" />
+    <Compile Include="vendor\TextRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

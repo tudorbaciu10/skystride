@@ -137,6 +137,8 @@ namespace skystride.vendor
 
             activeScene?.Render();
 
+            TextRenderer.RenderText($"x = {camera.position.X}, y = {camera.position.Y}, z = {camera.position.Z}", 16, 24, Color.White, Width, Height);
+
             SwapBuffers();
         }
     }
