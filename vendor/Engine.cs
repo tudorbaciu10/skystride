@@ -57,8 +57,8 @@ namespace skystride.vendor
 
             fog = new Fog(Color.DarkBlue, FogMode.Exp2, 0.02f, 30f, 250f);
 
-            activeScene = new ArcticScene();
-            //activeScene = new TemplateScene();
+            //activeScene = new ArcticScene();
+            activeScene = new TemplateScene();
 
             CursorVisible = false;
             this.isMouseCentered = true;
@@ -115,6 +115,8 @@ namespace skystride.vendor
             }
 
             camera.UpdatePhysics(currentKeyboardState, previousKeyboardState, (float)e.Time);
+
+            activeScene?.Update((float)e.Time, camera, currentKeyboardState, previousKeyboardState, currentMouseState, previousMouseState);
 
             this.previousKeyboardState = this.currentKeyboardState;
             this.previousMouseState = this.currentMouseState;

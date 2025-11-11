@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using OpenTK;
+using OpenTK.Input;
 using skystride.vendor;
 
 namespace skystride.scenes
@@ -33,9 +34,15 @@ namespace skystride.scenes
 
         protected void AddEntity(ISceneEntity entity) => Entities.Add(entity);
 
+        // Per-frame logic hook for scenes
+        public virtual void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
+        {
+            // 
+        }
+
         public virtual void Render()
         {
-            for (int i = 0; i < Entities.Count; i++)
+            for (int i =0; i < Entities.Count; i++)
             {
                 Entities[i].Render();
             }
@@ -43,7 +50,7 @@ namespace skystride.scenes
 
         public virtual void Dispose()
         {
-            for (int i = 0; i < Entities.Count; i++)
+            for (int i =0; i < Entities.Count; i++)
             {
                 var disp = Entities[i] as IDisposable;
                 if (disp != null)

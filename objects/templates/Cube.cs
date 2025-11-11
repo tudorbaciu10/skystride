@@ -11,6 +11,10 @@ namespace skystride.objects.templates
         private float size;
         private Color color;
 
+        public Vector3 GetPosition() { return this.position; }
+        public float GetSize() { return this.size; }
+        public Color GetColor() { return this.color; }
+
         public Cube() : this(new Vector3(0f, 0.5f, 0f), 1f, Color.BlueViolet) { }
 
         public Cube(Vector3 position, float size, Color color)
