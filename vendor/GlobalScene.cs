@@ -73,7 +73,6 @@ namespace skystride.scenes
             var checkboardTerrain = entity as CheckboardTerrain;
             if(checkboardTerrain != null)
             {
-                // Only add a single thin ground collider covering full rendered span.
                 float halfSpan = checkboardTerrain.GetSize(); // tiles * tileSize (half span)
                 float fullSpan = halfSpan *2f; // cover -tiles .. +tiles
                 const float groundThickness =0.2f; // thin collision layer
