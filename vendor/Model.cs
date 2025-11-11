@@ -31,6 +31,9 @@ namespace skystride.vendor
         private string detectedTexturePath;
         private bool hasTexcoords;
 
+        private float _texScaleU =1f;
+        private float _texScaleV =1f;
+
         public Model(string objectPath, string objectPathTexture = "assets/textures/undefined.jpg")
         {
             SourcePath = Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName, objectPath.TrimStart('/', '\\'));
@@ -364,41 +367,52 @@ namespace skystride.vendor
             }
         }
 
+        public void SetTextureScale(float u, float v)
+        {
+            _texScaleU = u <=0f ?1f : u;
+            _texScaleV = v <=0f ?1f : v;
+        }
+
         public void Render(Vector3 position, float scale, float rotX, float rotY, float rotZ)
         {
             if (!Loaded) return;
 
             GL.PushMatrix();
             GL.Translate(position);
-            if (rotX != 0f) GL.Rotate(rotX, 1f, 0f, 0f);
-            if (rotY != 0f) GL.Rotate(rotY, 0f, 1f, 0f);
-            if (rotZ != 0f) GL.Rotate(rotZ, 0f, 0f, 1f);
+            if (rotX !=0f) GL.Rotate(rotX,1f,0f,0f);
+            if (rotY !=0f) GL.Rotate(rotY,0f,1f,0f);
+            if (rotZ !=0f) GL.Rotate(rotZ,0f,0f,1f);
             GL.Scale(scale, scale, scale);
             GL.Translate(-center);
 
-            GL.Color3(1f, 1f, 1f);
+            GL.Color3(1f,1f,1f);
 
             GL.EnableClientState(ArrayCap.VertexArray);
             GL.EnableClientState(ArrayCap.NormalArray);
 
-            bool bindTexcoords = textureHandle != 0 && texcoords.Count == vertices.Count;
+            bool bindTexcoords = textureHandle !=0 && texcoords.Count == vertices.Count;
             if (bindTexcoords)
             {
                 GL.Enable(EnableCap.Texture2D);
                 GL.BindTexture(TextureTarget.Texture2D, textureHandle);
                 GL.EnableClientState(ArrayCap.TextureCoordArray);
+                // Set texture matrix for scaling
+                GL.MatrixMode(MatrixMode.Texture);
+                GL.LoadIdentity();
+                GL.Scale(_texScaleU, _texScaleV,1f);
+                GL.MatrixMode(MatrixMode.Modelview);
             }
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.VertexPointer(3, VertexPointerType.Float, 0, IntPtr.Zero);
+            GL.VertexPointer(3, VertexPointerType.Float,0, IntPtr.Zero);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
-            GL.NormalPointer(NormalPointerType.Float, 0, IntPtr.Zero);
+            GL.NormalPointer(NormalPointerType.Float,0, IntPtr.Zero);
 
             if (bindTexcoords)
             {
                 GL.BindBuffer(BufferTarget.ArrayBuffer, tbo);
-                GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, IntPtr.Zero);
+                GL.TexCoordPointer(2, TexCoordPointerType.Float,0, IntPtr.Zero);
             }
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
@@ -408,8 +422,12 @@ namespace skystride.vendor
             if (bindTexcoords)
             {
                 GL.DisableClientState(ArrayCap.TextureCoordArray);
-                GL.BindTexture(TextureTarget.Texture2D, 0);
+                GL.BindTexture(TextureTarget.Texture2D,0);
                 GL.Disable(EnableCap.Texture2D);
+                // Reset texture matrix
+                GL.MatrixMode(MatrixMode.Texture);
+                GL.LoadIdentity();
+                GL.MatrixMode(MatrixMode.Modelview);
             }
 
             GL.DisableClientState(ArrayCap.VertexArray);

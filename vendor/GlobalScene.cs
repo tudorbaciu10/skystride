@@ -23,9 +23,10 @@ namespace skystride.scenes
             private readonly Vector3 _position;
             private readonly float _scale;
             private readonly float _rx, _ry, _rz;
-            public ModelEntity(Model model, Vector3 position, float scale, float rx, float ry, float rz)
+            public ModelEntity(Model model, Vector3 position, float scale, float rx, float ry, float rz, float texScaleU = 1f, float texScaleV = 1f)
             {
                 _model = model; _position = position; _scale = scale; _rx = rx; _ry = ry; _rz = rz;
+                _model?.SetTextureScale(texScaleU, texScaleV);
             }
             public void Render()
             {
@@ -34,15 +35,25 @@ namespace skystride.scenes
             }
             public Vector3 GetPosition() { return _position; }
             public Vector3 GetSize() { return _model != null ? _model.BoundsSize * _scale : Vector3.Zero; }
+            public void SetTextureScale(float u, float v)
+            {
+                _model?.SetTextureScale(u, v);
+            }
             public void Dispose()
             {
                 try { _model?.Dispose(); } catch { }
             }
         }
 
-        protected void AddEntity(ISceneEntity entity)
+        protected void AddEntity(ISceneEntity entity, bool collidable = true)
         {
+            if(entity == null)
+                return;
+
             Entities.Add(entity);
+
+            if (!collidable)
+                return;
 
             var modelEnt = entity as ModelEntity;
             if (modelEnt != null)
