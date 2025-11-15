@@ -28,15 +28,15 @@ namespace skystride.scenes
             platform.SetTextureScale(20f, 20f);
             AddEntity(platform);
 
-            Plane wallSpawn = new Plane(new Vector3(17f, 5.2f, 0f), 35f, 1f, 10f, Color.Brown, new Vector3(0f, 0f, 0f));
+            Plane wallSpawn = new Plane(new Vector3(17f, 5.2f, 50f), 135f, 1f, 10f, Color.Brown, new Vector3(0f, 0f, 0f));
             wallSpawn.SetTexture("assets/textures/bricks.jpg");
-            wallSpawn.SetTextureScale(5f, 2f);
+            wallSpawn.SetTextureScale(25f, 2f);
             wallSpawn.SetRotation(0f, 90f, 0f);
             AddEntity(wallSpawn);
 
-            Plane wallSpawn2 = new Plane(new Vector3(-17f, 5.2f, 0f), 35f, 1f, 10f, Color.Brown, new Vector3(0f, 0f, 0f));
+            Plane wallSpawn2 = new Plane(new Vector3(-17f, 5.2f, 50f), 135f, 1f, 10f, Color.Brown, new Vector3(0f, 0f, 0f));
             wallSpawn2.SetTexture("assets/textures/bricks.jpg");
-            wallSpawn2.SetTextureScale(5f, 2f);
+            wallSpawn2.SetTextureScale(25f, 2f);
             wallSpawn2.SetRotation(0f, 90f, 0f);
             AddEntity(wallSpawn2);
 
@@ -55,6 +55,18 @@ namespace skystride.scenes
 
             AddEntity(new ModelEntity(
                 new Model("/assets/models/tree.obj", "/assets/textures/grass.jpg"),
+                new Vector3(-24f, 17f, 45f), 1f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/tree.obj", "/assets/textures/grass.jpg"),
+                new Vector3(24f, 17f, 85f), 1f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/tree.obj", "/assets/textures/grass.jpg"),
+                new Vector3(-24f, 17f, 115f), 1f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/tree.obj", "/assets/textures/grass.jpg"),
                 new Vector3(-5f, 17f, -24f), 1f, 0f, 0f, 0f));
 
             AddEntity(new ModelEntity(
@@ -68,6 +80,39 @@ namespace skystride.scenes
             AddEntity(new ModelEntity(
                 new Model("/assets/models/box.obj", "/assets/models/box.jpg"),
                 new Vector3(0f, -2f, 24f), 5f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/box.obj", "/assets/models/box.jpg"),
+                new Vector3(5f, -2f, 34f), 5f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/box.obj", "/assets/models/box.jpg"),
+                new Vector3(-5f, -2f, 44f), 5f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/box.obj", "/assets/models/box.jpg"),
+                new Vector3(0f, -2f, 54f), 5f, 0f, 0f, 0f));
+
+            Plane platform2 = new Plane(new Vector3(0f, 0f, 70f), 35f, 15f, 0.4f, Color.Cyan, new Vector3(0f, 0f, 0f));
+            platform2.SetTexture("assets/textures/grass.jpg");
+            platform2.SetTextureScale(5f, 2f);
+            AddEntity(platform2);
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/bush.obj", "/assets/textures/rock.jpg"),
+                new Vector3(11f, 3f, 70f), 2f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/bush.obj", "/assets/textures/rock.jpg"),
+                new Vector3(-11f, 3f, 70f), 2f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/barrel.obj", "/assets/models/barrel.jpg"),
+                new Vector3(0f, -5f, 87f), 10f, 0f, 0f, 0f));
+
+            AddEntity(new ModelEntity(
+                new Model("/assets/models/barrel.obj", "/assets/models/barrel.jpg"),
+                new Vector3(5f, -4f, 105f), 10f, 0f, 0f, 0f));
 
             AddEntity(new Rain(count: 2000, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 12f, maxSpeed: 24f));
         }

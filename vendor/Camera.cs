@@ -35,7 +35,7 @@ namespace skystride.vendor
         private Vector2 latestMousePosition;
 
         // physics fields
-        private float moveSpeed = 6.0f; // base desired speed
+        private float moveSpeed = 26.0f; // base desired speed, default 6.0f
         private float sprintMultiplier = 2.0f;
         private float jumpSpeed = 6.5f; // initial jump velocity
         private float gravity = -18.0f; // gravity acceleration (m/s^2)
@@ -55,7 +55,7 @@ namespace skystride.vendor
         private float hitboxSize = 1f;
 
         // turn physics on by default to allow standing/walking
-        private bool physicsEnabled = true;
+        private bool physicsEnabled = false;
 
         public Camera(Vector3 _position, float _aspectRatio)
         {
