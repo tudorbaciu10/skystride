@@ -34,7 +34,7 @@ namespace skystride.scenes
             wallSpawn.SetRotation(0f, 90f, 0f);
             AddEntity(wallSpawn);
 
-            Plane wallSpawn2 = new Plane(new Vector3(-17f, 5.2f, 50f), 135f, 1f, 10f, Color.Brown, new Vector3(0f, 0f, 0f));
+            Plane wallSpawn2 = new Plane(new Vector3(-17f, 5.2f, 27.5f), 100f, 1f, 10f, Color.Brown, new Vector3(0f, 0f, 0f));
             wallSpawn2.SetTexture("assets/textures/bricks.jpg");
             wallSpawn2.SetTextureScale(25f, 2f);
             wallSpawn2.SetRotation(0f, 90f, 0f);
@@ -69,7 +69,12 @@ namespace skystride.scenes
             AddEntity(new ModelEntity("/assets/models/bush.obj", "/assets/textures/rock.jpg", new Vector3(-11f, 3f, 70f), 2f, 0f, 0f, 0f, 1f, 1f));
 
             AddEntity(new ModelEntity("/assets/models/barrel.obj", "/assets/models/barrel.jpg", new Vector3(0f, -5f, 87f), 10f, 0f, 0f, 0f, 1f, 1f));
-            AddEntity(new ModelEntity("/assets/models/barrel.obj", "/assets/models/barrel.jpg", new Vector3(5f, -4f, 105f), 10f, 0f, 0f, 0f, 1f, 1f));
+            AddEntity(new ModelEntity("/assets/models/barrel.obj", "/assets/models/barrel.jpg", new Vector3(-5f, -4f, 105f), 10f, 0f, 0f, 0f, 1f, 1f));
+
+            Plane wallSpawn4 = new Plane(new Vector3(0f, 5.2f, 115f), 35f, 1f, 10f, Color.Brown, new Vector3(0f, 0f, 0f));
+            wallSpawn4.SetTexture("assets/textures/bricks.jpg");
+            wallSpawn4.SetTextureScale(5f, 2f);
+            AddEntity(wallSpawn4);
 
             AddEntity(new Rain(count: 2000, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 12f, maxSpeed: 24f));
         }
