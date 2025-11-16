@@ -17,50 +17,141 @@ namespace skystride.scenes
         // Global colliders accumulated automatically
         protected readonly List<AABB> Colliders = new List<AABB>();
 
-        protected sealed class ModelEntity : ISceneEntity, IDisposable
+        // Global draw distance
+        public static float DrawDistance =150f; // default draw distance
+        internal static float DrawDistanceSquared { get { return DrawDistance * DrawDistance; } }
+        internal static Vector3 CurrentCameraPos; // updated every frame in Update()
+
+        protected class ModelEntity : ISceneEntity, IDisposable
         {
-            private readonly Model _model;
+            private readonly string _objectPath;
+            private readonly string _texturePath;
             private readonly Vector3 _position;
             private readonly float _scale;
             private readonly float _rx, _ry, _rz;
-            public ModelEntity(Model model, Vector3 position, float scale, float rx, float ry, float rz, float texScaleU = 1f, float texScaleV = 1f)
+            private readonly float _texScaleU, _texScaleV;
+            private readonly float _loadDistance; // threshold to load resources
+            private readonly float _unloadDistance; // threshold to unload resources
+            private readonly float _loadDistanceSq;
+            private readonly float _unloadDistanceSq;
+            private Model _model; // null until loaded
+            private bool _isLoaded;
+            private AABB _dynamicCollider; // created when loaded, removed when unloaded
+            private readonly List<AABB> _collidersRef; // reference to scene collider list
+
+            // Constructor using paths (lazy default)
+            public ModelEntity(string objectPath, string texturePath, Vector3 position, float scale,
+            float rx, float ry, float rz, float texScaleU =1f, float texScaleV =1f,
+            float? loadDistance = null, float? unloadDistance = null, List<AABB> collidersRef = null)
             {
-                _model = model; _position = position; _scale = scale; _rx = rx; _ry = ry; _rz = rz;
-                _model?.SetTextureScale(texScaleU, texScaleV);
+                _objectPath = objectPath;
+                _texturePath = texturePath;
+                _position = position;
+                _scale = scale;
+                _rx = rx; _ry = ry; _rz = rz;
+                _texScaleU = texScaleU; _texScaleV = texScaleV;
+                _collidersRef = collidersRef; // may be null if caller omitted
+
+                float ld = loadDistance ?? (GlobalScene.DrawDistance *0.9f);
+                float ud = unloadDistance ?? (GlobalScene.DrawDistance *1.15f);
+                if (ud <= ld) ud = ld +25f; // ensure hysteresis
+                _loadDistance = ld;
+                _unloadDistance = ud;
+                _loadDistanceSq = _loadDistance * _loadDistance;
+                _unloadDistanceSq = _unloadDistance * _unloadDistance;
             }
+
+            // Legacy constructor kept (immediate model provided)
+            public ModelEntity(Model model, Vector3 position, float scale, float rx, float ry, float rz, float texScaleU =1f, float texScaleV =1f)
+            {
+                _model = model;
+                _objectPath = null;
+                _texturePath = null;
+                _position = position;
+                _scale = scale;
+                _rx = rx; _ry = ry; _rz = rz;
+                _texScaleU = texScaleU; _texScaleV = texScaleV;
+                _isLoaded = model != null && model.Loaded;
+                _loadDistance = GlobalScene.DrawDistance *0.9f;
+                _unloadDistance = GlobalScene.DrawDistance *1.15f;
+                _loadDistanceSq = _loadDistance * _loadDistance;
+                _unloadDistanceSq = _unloadDistance * _unloadDistance;
+            }
+
+            public void Evaluate(Vector3 cameraPos)
+            {
+                float distSq = Vector3.DistanceSquared(cameraPos, _position);
+
+                if (!_isLoaded && distSq <= _loadDistanceSq)
+                {
+                    if (_objectPath != null)
+                    {
+                        try
+                        {
+                            _model = new Model(_objectPath, _texturePath);
+                            _model.SetTextureScale(_texScaleU, _texScaleV);
+                            _isLoaded = _model.Loaded;
+                            if (_isLoaded && _collidersRef != null)
+                            {
+                                var size = GetSize();
+                                if (size != Vector3.Zero)
+                                {
+                                    _dynamicCollider = new AABB(_position, size);
+                                    _collidersRef.Add(_dynamicCollider);
+                                }
+                            }
+                        }
+                        catch { _isLoaded = false; }
+                    }
+                }
+                else if (_isLoaded && distSq > _unloadDistanceSq)
+                {
+                    // Unload resources
+                    try { _model?.Dispose(); } catch { }
+                    _model = null;
+                    _isLoaded = false;
+                    if (_dynamicCollider != null && _collidersRef != null)
+                    {
+                        _collidersRef.Remove(_dynamicCollider);
+                        _dynamicCollider = null;
+                    }
+                }
+            }
+
             public void Render()
             {
+                // Frustum/draw distance culling first
+                if (Vector3.DistanceSquared(_position, GlobalScene.CurrentCameraPos) > GlobalScene.DrawDistanceSquared)
+                    return;
                 if (_model != null && _model.Loaded)
                     _model.Render(_position, _scale, _rx, _ry, _rz);
             }
+
             public Vector3 GetPosition() { return _position; }
             public Vector3 GetSize() { return _model != null ? _model.BoundsSize * _scale : Vector3.Zero; }
-            public void SetTextureScale(float u, float v)
-            {
-                _model?.SetTextureScale(u, v);
-            }
+            public void SetTextureScale(float u, float v) { _model?.SetTextureScale(u, v); }
             public void Dispose()
             {
                 try { _model?.Dispose(); } catch { }
+                if (_dynamicCollider != null && _collidersRef != null)
+                {
+                    _collidersRef.Remove(_dynamicCollider);
+                    _dynamicCollider = null;
+                }
             }
         }
 
         protected void AddEntity(ISceneEntity entity, bool collidable = true)
         {
-            if(entity == null)
-                return;
-
+            if (entity == null) return;
             Entities.Add(entity);
 
-            if (!collidable)
-                return;
+            if (!collidable) return;
 
             var modelEnt = entity as ModelEntity;
             if (modelEnt != null)
             {
-                var size = modelEnt.GetSize();
-                if (size != Vector3.Zero)
-                    Colliders.Add(new AABB(modelEnt.GetPosition(), size));
+                // Collider will be added when model actually loads (lazy). Skip now.
                 return;
             }
 
@@ -78,43 +169,35 @@ namespace skystride.scenes
                 var size = plane.GetSize();
                 if (size != Vector3.Zero)
                 {
-                    // If plane is rotated we need to inflate its axis-aligned collider to cover the rotated extents.
                     Vector3 rotDeg = plane.GetRotation();
-                    // Treat very thin planes (height <=0) as having a small thickness for collision purposes.
-                    float effectiveHeight = size.Y <=0f ?0.05f : size.Y; // small thickness if flat
-                    float hx = size.X *0.5f; // local half-width (X)
-                    float hy = effectiveHeight *0.5f; // local half-height (Y)
-                    float hz = size.Z *0.5f; // local half-depth (Z)
-
+                    float effectiveHeight = size.Y <=0f ?0.05f : size.Y;
+                    float hx = size.X *0.5f;
+                    float hy = effectiveHeight *0.5f;
+                    float hz = size.Z *0.5f;
                     Vector3 colliderSize;
                     if (rotDeg != Vector3.Zero)
                     {
-                        // Yaw (Y), Pitch (X), Roll (Z)
                         float ry = MathHelper.DegreesToRadians(rotDeg.Y);
                         float rx = MathHelper.DegreesToRadians(rotDeg.X);
                         float rz = MathHelper.DegreesToRadians(rotDeg.Z);
                         Matrix4 R = Matrix4.CreateRotationY(ry) * Matrix4.CreateRotationX(rx) * Matrix4.CreateRotationZ(rz);
-                        
-                        Vector4 r0 = R.Row0;
-                        Vector4 r1 = R.Row1;
-                        Vector4 r2 = R.Row2;
-                        float ex = Math.Abs(r0.X) * hx + Math.Abs(r0.Y) * hy + Math.Abs(r0.Z) * hz; // extent along world X
-                        float ey = Math.Abs(r1.X) * hx + Math.Abs(r1.Y) * hy + Math.Abs(r1.Z) * hz; // extent along world Y
-                        float ez = Math.Abs(r2.X) * hx + Math.Abs(r2.Y) * hy + Math.Abs(r2.Z) * hz; // extent along world Z
+                        Vector4 r0 = R.Row0; Vector4 r1 = R.Row1; Vector4 r2 = R.Row2;
+                        float ex = Math.Abs(r0.X) * hx + Math.Abs(r0.Y) * hy + Math.Abs(r0.Z) * hz;
+                        float ey = Math.Abs(r1.X) * hx + Math.Abs(r1.Y) * hy + Math.Abs(r1.Z) * hz;
+                        float ez = Math.Abs(r2.X) * hx + Math.Abs(r2.Y) * hy + Math.Abs(r2.Z) * hz;
                         colliderSize = new Vector3(ex *2f, ey *2f, ez *2f);
                     }
                     else
                     {
-                        colliderSize = new Vector3(hx *2f, hy *2f, hz *2f); // unrotated
+                        colliderSize = new Vector3(hx *2f, hy *2f, hz *2f);
                     }
-
                     Colliders.Add(new AABB(plane.GetPosition(), colliderSize));
                 }
                 return;
             }
 
             var checkboardTerrain = entity as CheckboardTerrain;
-            if(checkboardTerrain != null)
+            if (checkboardTerrain != null)
             {
                 float halfSpan = checkboardTerrain.GetSize(); // tiles * tileSize (half span)
                 float fullSpan = halfSpan *2f; // cover -tiles .. +tiles
@@ -129,7 +212,15 @@ namespace skystride.scenes
         // Per-frame logic hook for scenes
         public virtual void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
-            // base scene does nothing
+            // Update camera position reference for distance culling
+            CurrentCameraPos = camera != null ? camera.position : Vector3.Zero;
+
+            for (int i =0; i < Entities.Count; i++)
+            {
+                var me = Entities[i] as ModelEntity;
+                if (me != null)
+                    me.Evaluate(CurrentCameraPos);
+            }
         }
 
         public virtual void Render()

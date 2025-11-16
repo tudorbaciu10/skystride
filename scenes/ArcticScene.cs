@@ -61,11 +61,16 @@ namespace skystride.scenes
                 new Model("/assets/models/iashik.obj", "/assets/models/iashik.jpg"),
                 new Vector3(-67f, -2f, 2f), 5f, 0f, 90f, -360f));
 
+            // Distant lazy crates
+            AddEntity(new ModelEntity("/assets/models/iashik.obj", "/assets/models/iashik.jpg", new Vector3(-90f, -2f, 10f), 5f, 0f, 90f, -360f, 1f, 1f));
+            AddEntity(new ModelEntity("/assets/models/iashik.obj", "/assets/models/iashik.jpg", new Vector3(-110f, -2f, -5f), 5f, 0f, 90f, -360f, 1f, 1f));
+
             AddEntity(new Snow(count: 7500, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 1.5f, maxSpeed: 4.5f));
         }
 
         public override void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
+            base.Update(dt, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse);
             if (currentKeyboard[Key.R])
             {
                 camera.SetPosition(new Vector3(0f, 5f, 10f));

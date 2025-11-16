@@ -56,7 +56,7 @@ namespace skystride.vendor
 
             camera = new Camera(new Vector3(0, 5, 3), Width / (float)Height);
 
-            fog = new Fog(Color.DarkBlue, FogMode.Exp2, 0.01f, 30f, 250f);
+            fog = new Fog(Color.DarkBlue, FogMode.Exp2, 0.005f, 30f, 250f);
 
             //activeScene = new TemplateScene();
             //activeScene = new ArcticScene();

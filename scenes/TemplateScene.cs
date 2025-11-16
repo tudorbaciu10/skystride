@@ -28,13 +28,17 @@ namespace skystride.scenes
             _sky = new Skybox("assets/textures/skybox_forest.jpg", 400f);
             _sky.SetPosition(new Vector3(0f, 20f, 0f));
 
-            // models use ModelEntity wrapper to carry transform
+            // Immediate near models (legacy constructor)
             AddEntity(new ModelEntity(
                 new Model("/assets/models/frog.obj", "/assets/models/frog.jpg"),
                 new Vector3(5f, 0.7f, 0f), 0.4f, -90f, 0f, -150f));
             AddEntity(new ModelEntity(
                 new Model("/assets/models/iashik.obj", "/assets/models/iashik.jpg"),
                 new Vector3(-5f, 0.7f, 0f), 3f, -90f, 0f, -150f));
+
+            // Distant models use lazy path-based constructor (auto load/unload)
+            AddEntity(new ModelEntity("/assets/models/iashik.obj", "/assets/models/iashik.jpg", new Vector3(0f, 0.7f, 140f), 3f, -90f, 0f, -150f, 1f, 1f));
+            AddEntity(new ModelEntity("/assets/models/iashik.obj", "/assets/models/iashik.jpg", new Vector3(15f, 0.7f, 155f), 3f, -90f, 0f, -150f, 1f, 1f));
         }
 
         public void testAABB(Camera _camera, Cube _cube)
@@ -47,11 +51,9 @@ namespace skystride.scenes
 
         public override void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
+            base.Update(dt, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse);
             if (_cube != null && camera != null)
             {
-                // debug log
-                //testAABB(camera, _cube);
-
                 camera.ResolveCollisions(Colliders);
             }
         }
