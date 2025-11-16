@@ -15,9 +15,9 @@ namespace skystride.vendor
         private static readonly TextRenderer Shared = new TextRenderer();
 
         // Static convenience to allow TextRenderer.RenderText(...)
-        public static void RenderText(string text, float x, float y, Color color, int windowWidth, int windowHeight)
+        public static void RenderText(string text, float x, float y, Color color, int windowWidth, int windowHeight, float fontSize = 16f)
         {
-            Shared.DrawTextInternal(text, x, y, color, windowWidth, windowHeight, "Consolas", 16f);
+            Shared.DrawTextInternal(text, x, y, color, windowWidth, windowHeight, "Consolas", fontSize);
         }
 
         public static void RenderText(string text, float x, float y, Color color, int windowWidth, int windowHeight, string fontName, float fontSize)

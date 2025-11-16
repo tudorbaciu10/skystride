@@ -22,6 +22,7 @@ namespace skystride.vendor
 
         // main instances
         Camera camera;
+        Player player = new Player();
         private bool isMouseCentered = false;
 
         // shader instances
@@ -139,6 +140,9 @@ namespace skystride.vendor
             activeScene?.Render();
 
             TextRenderer.RenderText($"x = {camera.position.X}, y = {camera.position.Y}, z = {camera.position.Z}", 16, 24, Color.White, Width, Height);
+
+            // player info moved to left bottom
+            TextRenderer.RenderText($"{player.GetHealth()}+", 32, Height - 64, Color.DarkOrange, Width, Height, 32f);
 
             SwapBuffers();
         }

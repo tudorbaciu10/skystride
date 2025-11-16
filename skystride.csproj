@@ -50,6 +50,7 @@
     <Compile Include="objects\CheckboardTerrain.cs" />
     <Compile Include="scenes\ForestScene.cs" />
     <Compile Include="shaders\Rain.cs" />
+    <Compile Include="vendor\Player.cs" />
     <Compile Include="vendor\Skybox.cs" />
     <Compile Include="objects\templates\Cube.cs" />
     <Compile Include="objects\templates\Grid.cs" />
