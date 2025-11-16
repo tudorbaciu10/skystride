@@ -37,7 +37,7 @@ namespace skystride.scenes
             private Model _model; // null until loaded
             private bool _isLoaded;
             private AABB _dynamicCollider; // created when loaded, removed when unloaded
-            private readonly List<AABB> _collidersRef; // reference to scene collider list
+            private List<AABB> _collidersRef; // reference to scene collider list (set via ctor or Attach)
 
             // Constructor using paths (lazy default)
             public ModelEntity(string objectPath, string texturePath, Vector3 position, float scale,
@@ -76,6 +76,25 @@ namespace skystride.scenes
                 _unloadDistance = GlobalScene.DrawDistance *1.15f;
                 _loadDistanceSq = _loadDistance * _loadDistance;
                 _unloadDistanceSq = _unloadDistance * _unloadDistance;
+            }
+
+            // Allow wiring the colliders list after construction (e.g., from AddEntity)
+            internal void AttachCollidersRef(List<AABB> collidersRef)
+            {
+                if (collidersRef == null) return;
+                if (_collidersRef != null) return; // already attached via ctor
+                _collidersRef = collidersRef;
+
+                // If already loaded (legacy ctor), create and register collider immediately
+                if (_isLoaded && _dynamicCollider == null)
+                {
+                    var size = GetSize();
+                    if (size != Vector3.Zero)
+                    {
+                        _dynamicCollider = new AABB(_position, size);
+                        _collidersRef.Add(_dynamicCollider);
+                    }
+                }
             }
 
             public void Evaluate(Vector3 cameraPos)
@@ -151,7 +170,8 @@ namespace skystride.scenes
             var modelEnt = entity as ModelEntity;
             if (modelEnt != null)
             {
-                // Collider will be added when model actually loads (lazy). Skip now.
+                // Ensure model entities participate in collisions when loaded
+                modelEnt.AttachCollidersRef(Colliders);
                 return;
             }
 
