@@ -35,7 +35,7 @@ namespace skystride.vendor
         private Vector2 latestMousePosition;
 
         // physics fields
-        private float moveSpeed = 26.0f; // base desired speed, default 6.0f
+        private float moveSpeed = 6.0f; // base desired speed, default 6.0f
         private float sprintMultiplier = 2.0f;
         private float jumpSpeed = 6.5f; // initial jump velocity
         private float gravity = -18.0f; // gravity acceleration (m/s^2)
@@ -55,7 +55,10 @@ namespace skystride.vendor
         private float hitboxSize = 1f;
 
         // turn physics on by default to allow standing/walking
-        private bool physicsEnabled = false;
+        private bool physicsEnabled = true;
+
+        public bool doubleJumpEnabled = true;
+        private bool hasDoubleJumped = false; // tracks if double jump was used since last time grounded
 
         public Camera(Vector3 _position, float _aspectRatio)
         {
@@ -129,6 +132,7 @@ namespace skystride.vendor
                         p.Y = colMax.Y + halfY;
                         if (velocity.Y < 0f) velocity.Y = 0f;
                         groundedThisFrame = true;
+                        hasDoubleJumped = false;
 
                         camMin.Y = p.Y - halfY;
                         camMax.Y = p.Y + halfY;
@@ -185,6 +189,7 @@ namespace skystride.vendor
             if (groundedThisFrame)
             {
                 isGrounded = true;
+                hasDoubleJumped = false;
             }
             this.position = p;
         }
@@ -286,6 +291,7 @@ namespace skystride.vendor
                     }
 
                     isGrounded = false;
+                    hasDoubleJumped = false;
                 }
             }
             else
@@ -297,6 +303,22 @@ namespace skystride.vendor
                     float accel = onlyStrafe ? sideStrafeAccel : airAccel;
                     float wishSpeed = onlyStrafe ? sideStrafeSpeed : targetSpeed;
                     Accelerate(ref velocity, wishDir, wishSpeed, accel, dt);
+                }
+
+                if (doubleJumpEnabled && !hasDoubleJumped && jumpPressed)
+                {
+                    velocity.Y = jumpSpeed;
+
+                    // optional forward push similar to ground jump
+                    Vector3 jumpPushDir = forward;
+                    if (jumpPushDir.LengthSquared > 0f)
+                    {
+                        float push = Math.Max(1.0f, targetSpeed * 0.1f);
+                        velocity.X += jumpPushDir.X * push;
+                        velocity.Z += jumpPushDir.Z * push;
+                    }
+
+                    hasDoubleJumped = true;
                 }
 
                 // optional very small air drag to stabilize
@@ -317,6 +339,7 @@ namespace skystride.vendor
                 pos.Y = minY;
                 if (velocity.Y < 0f) velocity.Y = 0f;
                 isGrounded = true;
+                hasDoubleJumped = false;
             }
             else
             {
