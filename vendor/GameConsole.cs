@@ -146,7 +146,7 @@ namespace skystride.vendor
 
             // Draw semi-transparent background quad
             GL.Disable(EnableCap.DepthTest); // ensure overlay draws on top
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
             GL.Color4(0f, 0f, 0f, 0.6f); // black with60% opacity
             GL.Vertex2(0, 0);
             GL.Vertex2(width, 0);
