@@ -18,6 +18,9 @@ namespace skystride.scenes
     {
         private Skybox _sky;
 
+        private float _movingBoxDirection =1f; //1 = right, -1 = left
+        private ModelEntity movingBox = new ModelEntity("/assets/models/box.obj", "/assets/models/box.jpg", new Vector3(-90f, -3f,96f),7f,0f,0f,0f,1f,1f);
+
         public ForestScene()
         {
             _sky = new Skybox("assets/textures/skybox/forest.jpg", 400f);
@@ -88,6 +91,14 @@ namespace skystride.scenes
             platform3.SetRotation(0f, 90f, 0f);
             AddEntity(platform3);
 
+            AddEntity(movingBox);
+
+            Plane platform4 = new Plane(new Vector3(-110f, 0f, 95f), 40f, 15f, 0.4f, Color.Cyan, new Vector3(0f, 0f, 0f));
+            platform4.SetTexture("assets/textures/grass.jpg");
+            platform4.SetTextureScale(5f, 2f);
+            platform4.SetRotation(0f, 90f, 0f);
+            AddEntity(platform4);
+
             AddEntity(new Rain(count: 2000, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 12f, maxSpeed: 24f));
         }
 
@@ -95,9 +106,28 @@ namespace skystride.scenes
         {
             base.Update(dt, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse); // ensures lazy evaluation & camera pos update
 
-            if(camera.position.Y < -8f)
+            if (camera.position.Y < -8f)
             {
                 camera.SetPosition(new Vector3(0f, 10f, 0f));
+            }
+
+            // moving box logic
+            if (movingBox != null)
+            {
+                float boxSpeed = 5f;
+                Vector3 boxPos = movingBox.GetPosition();
+                boxPos.X += _movingBoxDirection * boxSpeed * dt;
+                if (boxPos.X > -55f)
+                {
+                    boxPos.X = -55f;
+                    _movingBoxDirection = -1f;
+                }
+                else if (boxPos.X < -90f)
+                {
+                    boxPos.X = -90f;
+                    _movingBoxDirection =1f;
+                }
+                movingBox.SetPosition(boxPos);
             }
 
             camera.ResolveCollisions(Colliders);

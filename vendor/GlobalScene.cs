@@ -24,16 +24,16 @@ namespace skystride.scenes
 
         protected class ModelEntity : ISceneEntity, IDisposable
         {
-            private readonly string _objectPath;
-            private readonly string _texturePath;
-            private readonly Vector3 _position;
-            private readonly float _scale;
-            private readonly float _rx, _ry, _rz;
-            private readonly float _texScaleU, _texScaleV;
-            private readonly float _loadDistance; // threshold to load resources
-            private readonly float _unloadDistance; // threshold to unload resources
-            private readonly float _loadDistanceSq;
-            private readonly float _unloadDistanceSq;
+            private string _objectPath;
+            private string _texturePath;
+            private Vector3 _position; // removed readonly
+            private float _scale;
+            private float _rx, _ry, _rz;
+            private float _texScaleU, _texScaleV;
+            private float _loadDistance; // threshold to load resources
+            private float _unloadDistance; // threshold to unload resources
+            private float _loadDistanceSq;
+            private float _unloadDistanceSq;
             private Model _model; // null until loaded
             private bool _isLoaded;
             private AABB _dynamicCollider; // created when loaded, removed when unloaded
@@ -149,6 +149,16 @@ namespace skystride.scenes
             public Vector3 GetPosition() { return _position; }
             public Vector3 GetSize() { return _model != null ? _model.BoundsSize * _scale : Vector3.Zero; }
             public void SetTextureScale(float u, float v) { _model?.SetTextureScale(u, v); }
+            public void SetPosition(Vector3 newPosition)
+            {
+                _position = newPosition;
+                if (_dynamicCollider != null && _collidersRef != null)
+                {
+                    _collidersRef.Remove(_dynamicCollider);
+                    _dynamicCollider = new AABB(_position, GetSize());
+                    _collidersRef.Add(_dynamicCollider);
+                }
+            }
             public void Dispose()
             {
                 try { _model?.Dispose(); } catch { }
@@ -158,6 +168,8 @@ namespace skystride.scenes
                     _dynamicCollider = null;
                 }
             }
+
+            public string ModelPath { get { return _objectPath; } }
         }
 
         protected void AddEntity(ISceneEntity entity, bool collidable = true)
