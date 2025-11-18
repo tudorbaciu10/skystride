@@ -15,13 +15,14 @@ namespace skystride.vendor
         private KeyboardState _prevKeyboard;
 
         private Camera camera;
+        private Engine engine;
 
-        public GameConsole(Camera _camera)
+        public GameConsole(Camera _camera, Engine _engine = null)
         {
             this.camera = _camera;
+            this.engine = _engine;
         }
 
-        // Max lines kept
         private const int MaxLines = 100;
 
         public bool IsOpen => _isOpen;
@@ -86,7 +87,8 @@ namespace skystride.vendor
 
             AddLine("> " + cmd);
 
-            switch (cmd.Trim().ToLower())
+            string low = cmd.Trim().ToLowerInvariant();
+            switch (low)
             {
                 case "hello":
                     AddLine("Hello from console.");
@@ -108,7 +110,30 @@ namespace skystride.vendor
                     camera.ToggleDevMode();
                     break;
                 default:
-                    AddLine("Unknown command");
+                    if (low.StartsWith("map "))
+                    {
+                        string mapName = low.Substring("map ".Length).Trim();
+                        if (engine == null)
+                        {
+                            AddLine("Scene switching unavailable (no engine reference).");
+                        }
+                        else if (string.IsNullOrEmpty(mapName))
+                        {
+                            AddLine("Usage: map forest | arctic");
+                        }
+                        else
+                        {
+                            bool ok = engine.ChangeScene(mapName);
+                            if (ok)
+                                AddLine("Loaded map: " + mapName);
+                            else
+                                AddLine("Unknown map. Available: forest, arctic");
+                        }
+                    }
+                    else
+                    {
+                        AddLine("Unknown command");
+                    }
                     break;
             }
         }

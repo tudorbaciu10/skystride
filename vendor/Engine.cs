@@ -57,7 +57,7 @@ namespace skystride.vendor
 
             camera = new Camera(new Vector3(0,5,3), Width / (float)Height);
 
-            gameConsole = new GameConsole(camera);
+            gameConsole = new GameConsole(camera, this);
 
             fog = new Fog(Color.DarkBlue, FogMode.Exp2,0.005f,30f,250f);
 
@@ -166,6 +166,30 @@ namespace skystride.vendor
             gameConsole.Render(Width, Height);
 
             SwapBuffers();
+        }
+
+        // Scene change API used by console
+        internal bool ChangeScene(string mapName)
+        {
+            string key = (mapName ?? string.Empty).Trim().ToLowerInvariant();
+            GlobalScene newScene = null;
+            switch (key)
+            {
+                case "forest":
+                    newScene = new ForestScene();
+                    break;
+                case "arctic":
+                    newScene = new ArcticScene();
+                    break;
+                default:
+                    return false; // unsupported map
+            }
+
+            activeScene?.Dispose();
+            activeScene = newScene;
+
+            camera.SetPosition(new Vector3(0f, 5f, 3f));
+            return true;
         }
     }
 }
