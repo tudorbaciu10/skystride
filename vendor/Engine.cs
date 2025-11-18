@@ -34,9 +34,11 @@ namespace skystride.vendor
         public Engine() : base(800,600, new GraphicsMode(32,24,0,8))
         {
             VSync = VSyncMode.On;
-
             Title = "Skystride Engine";
             //WindowState = WindowState.Maximized;
+
+            X = (DisplayDevice.Default.Width - Width) /2;
+            Y = (DisplayDevice.Default.Height - Height) /2;
         }
 
         // on load event
