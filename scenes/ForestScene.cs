@@ -23,7 +23,7 @@ namespace skystride.scenes
 
         public ForestScene()
         {
-            _sky = new Skybox("assets/textures/skybox/forest.jpg", 400f);
+            _sky = new Skybox("assets/textures/skybox/skybox_forest.jpg", 400f);
             _sky.SetPosition(new Vector3(0f, 20f, 0f));
 
             Plane platform = new Plane(new Vector3(0f, 0f, 0f), 35f, 35f, 0.4f, Color.Cyan, new Vector3(0f, 0f, 0f));

@@ -55,7 +55,6 @@ namespace skystride.vendor
 
         private float hitboxSize = 1f;
 
-        // turn physics on by default to allow standing/walking
         private bool physicsEnabled = true;
 
         public bool isPhysicsEnabled { get { return physicsEnabled; } }

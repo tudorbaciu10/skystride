@@ -20,13 +20,13 @@ namespace skystride.scenes
 
         public ArcticScene()
         {
+            _sky = new Skybox("assets/textures/skybox/skybox_arctic.jpg", 400f);
+            _sky.SetPosition(new Vector3(0f, 20f, 0f));
+
             Plane platform = new Plane(new Vector3(0f, 0f, 0f), 40f, 70f, 1f, Color.IndianRed, new Vector3(0f, 1f, 0f));
             platform.SetTexture("assets/textures/snow.jpg");
             platform.SetTextureScale(5, 5);
             AddEntity(platform);
-
-            _sky = new Skybox("assets/textures/skybox_arctic.jpg", 400f);
-            _sky.SetPosition(new Vector3(0f, 20f, 0f));
 
             AddEntity(new ModelEntity(
                 new Model("/assets/models/tree.obj", "/assets/models/tree.png"),
@@ -65,7 +65,7 @@ namespace skystride.scenes
 
         public override void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
-            base.Update(dt, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse)
+            base.Update(dt, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse);
 
             camera.ResolveCollisions(Colliders);
         }
