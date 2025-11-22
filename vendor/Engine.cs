@@ -1,0 +1,195 @@
+﻿using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
+using System;
+using System.Drawing;
+using skystride.objects.templates;
+using skystride.scenes;
+using skystride.shaders;
+
+namespace skystride.vendor
+{
+    internal class Engine : GameWindow
+    {
+        // inits
+        private KeyboardState currentKeyboardState, previousKeyboardState;
+        private MouseState currentMouseState, previousMouseState;
+
+        // main instances
+        Camera camera;
+        Player player = new Player();
+        private bool isMouseCentered = false;
+
+        // shader instances
+        private Fog fog;
+
+        // scene instance
+        private GlobalScene activeScene;
+
+        // console system
+        private GameConsole gameConsole;
+
+        // init engine window
+        public Engine() : base(800,600, new GraphicsMode(32,24,0,8))
+        {
+            VSync = VSyncMode.On;
+            Title = "Skystride Engine";
+            //WindowState = WindowState.Maximized;
+
+            X = (DisplayDevice.Default.Width - Width) /2;
+            Y = (DisplayDevice.Default.Height - Height) /2;
+        }
+
+        // on load event
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            GL.ClearColor(Color.DarkBlue);
+
+            GL.Enable(EnableCap.DepthTest);
+            GL.DepthFunc(DepthFunction.Less);
+
+            GL.Hint(HintTarget.PolygonSmoothHint, HintMode.Nicest);
+            GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);
+            GL.Enable(EnableCap.LineSmooth);
+
+            camera = new Camera(new Vector3(0,5,3), Width / (float)Height);
+
+            gameConsole = new GameConsole(camera, this);
+
+            fog = new Fog(Color.DarkBlue, FogMode.Exp2,0.005f,30f,250f);
+
+            //activeScene = new TemplateScene();
+            //activeScene = new ArcticScene();
+            activeScene = new ForestScene();
+
+            CursorVisible = false;
+            this.isMouseCentered = true;
+        }
+
+        protected override void OnUnload(EventArgs e)
+        {
+            base.OnUnload(e);
+            activeScene?.Dispose();
+        }
+
+        // on resize event
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+
+            GL.Viewport(0,0, this.Width, this.Height);
+
+            camera.Resize(Width / (float)Height);
+
+            // Update projection on resize
+            var projection = camera.GetProjectionMatrix();
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadMatrix(ref projection);
+            GL.MatrixMode(MatrixMode.Modelview);
+        }
+
+        // on update frame event
+        protected override void OnUpdateFrame(FrameEventArgs e)
+        {
+            base.OnUpdateFrame(e);
+
+            this.currentKeyboardState = Keyboard.GetState();
+            this.currentMouseState = Mouse.GetState();
+
+            // Toggle console with Tilde / Grave accent key
+            if (currentKeyboardState.IsKeyDown(Key.Tilde) && !previousKeyboardState.IsKeyDown(Key.Tilde))
+            {
+                gameConsole.Toggle();
+            }
+
+            if (currentKeyboardState[Key.Escape])
+            {
+                CursorVisible = true;
+                this.isMouseCentered = false;
+            }
+
+            if (currentMouseState.LeftButton == ButtonState.Pressed)
+            {
+                CursorVisible = false;
+                this.isMouseCentered = true;
+            }
+
+            if (!CursorVisible && this.isMouseCentered && Focused && !gameConsole.IsOpen)
+            {
+                Mouse.SetPosition(X + Width /2f, Y + Height /2f);
+                camera.UpdateMouseState(this.currentMouseState);
+            }
+
+            // Only update camera physics when console not active
+            if (!gameConsole.IsOpen)
+            {
+                camera.UpdatePhysics(currentKeyboardState, previousKeyboardState, (float)e.Time);
+            }
+
+            // Scene update always (can be paused if desired later)
+            activeScene?.Update((float)e.Time, camera, currentKeyboardState, previousKeyboardState, currentMouseState, previousMouseState);
+
+            // Update console after capturing key states
+            gameConsole.Update(currentKeyboardState);
+
+            this.previousKeyboardState = this.currentKeyboardState;
+            this.previousMouseState = this.currentMouseState;
+        }
+
+        // on render frame event
+        protected override void OnRenderFrame(FrameEventArgs e)
+        {
+            base.OnRenderFrame(e);
+
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            Matrix4 viewMatrix = this.camera.GetViewMatrix();
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.LoadMatrix(ref viewMatrix);
+
+            this.fog.Render();
+
+            activeScene?.Render();
+
+            // crosshair
+            camera.RenderCrosshair(Width, Height);
+
+            TextRenderer.RenderText($"x = {camera.position.X}, y = {camera.position.Y}, z = {camera.position.Z}",16,24, Color.White, Width, Height);
+
+            // player info moved to left bottom
+            TextRenderer.RenderText($"{player.GetHealth()}+",32, Height -64, Color.DarkOrange, Width, Height,32f);
+
+            // Render console overlay last
+            gameConsole.Render(Width, Height);
+
+            SwapBuffers();
+        }
+
+        // Scene change API used by console
+        internal bool ChangeScene(string mapName)
+        {
+            string key = (mapName ?? string.Empty).Trim().ToLowerInvariant();
+            GlobalScene newScene = null;
+            switch (key)
+            {
+                case "forest":
+                    newScene = new ForestScene();
+                    break;
+                case "arctic":
+                    newScene = new ArcticScene();
+                    break;
+                default:
+                    return false; // unsupported map
+            }
+
+            activeScene?.Dispose();
+            activeScene = newScene;
+
+            camera.SetPosition(new Vector3(0f, 5f, 3f));
+            return true;
+        }
+    }
+}
