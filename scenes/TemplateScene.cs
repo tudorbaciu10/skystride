@@ -41,20 +41,20 @@ namespace skystride.scenes
             AddEntity(new ModelEntity("/assets/models/iashik.obj", "/assets/models/iashik.jpg", new Vector3(15f, 0.7f, 155f), 3f, -90f, 0f, -150f, 1f, 1f));
         }
 
-        public void testAABB(Camera _camera, Cube _cube)
+        public void testAABB(Player _player, Cube _cube)
         {
             AABB cubeAABB = new AABB(_cube.GetPosition(), new Vector3(_cube.GetSize(), _cube.GetSize(), _cube.GetSize()));
 
-            bool isColliding = _camera.Hitbox().Intersects(cubeAABB);
+            bool isColliding = _player.Hitbox().Intersects(cubeAABB);
             Console.WriteLine("Collision Detected: " + isColliding);
         }
 
-        public override void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
+        public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
-            base.Update(dt, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse);
-            if (_cube != null && camera != null)
+            base.Update(dt, player, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse);
+            if (_cube != null && player != null)
             {
-                camera.ResolveCollisions(Colliders);
+                player.ResolveCollisions(Colliders);
             }
         }
 

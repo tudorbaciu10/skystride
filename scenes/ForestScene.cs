@@ -106,13 +106,13 @@ namespace skystride.scenes
             _glock = new Glock();
         }
 
-        public override void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
+        public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
-            base.Update(dt, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse); // ensures lazy evaluation & camera pos update
+            base.Update(dt, player, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse); // ensures lazy evaluation & camera pos update
 
-            if (camera.position.Y < -8f)
+            if (player.position.Y < -8f)
             {
-                camera.SetPosition(new Vector3(0f, 10f, 0f));
+                player.SetPosition(new Vector3(0f, 10f, 0f));
             }
 
             // moving box logic
@@ -129,17 +129,17 @@ namespace skystride.scenes
                 else if (boxPos.X < -90f)
                 {
                     boxPos.X = -90f;
-                    _movingBoxDirection =1f;
+                    _movingBoxDirection = 1f;
                 }
                 movingBox.SetPosition(boxPos);
             }
 
-            camera.ResolveCollisions(Colliders);
+            player.ResolveCollisions(Colliders);
 
             // attach weapon once
-            if (camera != null && _glock != null && !camera.HasAttachedWeapon())
+            if (player != null && _glock != null && !player.HasAttachedWeapon())
             {
-                camera.AttachWeapon(_glock);
+                player.AttachWeapon(_glock);
             }
         }
 

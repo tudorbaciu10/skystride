@@ -63,11 +63,11 @@ namespace skystride.scenes
             AddEntity(new Snow(count: 7500, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 1.5f, maxSpeed: 4.5f));
         }
 
-        public override void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
+        public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
-            base.Update(dt, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse);
+            base.Update(dt, player, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse);
 
-            camera.ResolveCollisions(Colliders);
+            player.ResolveCollisions(Colliders);
         }
 
         public override void Render()

@@ -15,11 +15,13 @@ namespace skystride.vendor
         private KeyboardState _prevKeyboard;
 
         private Camera camera;
+        private Player player;
         private Engine engine;
 
-        public GameConsole(Camera _camera, Engine _engine = null)
+        public GameConsole(Camera _camera, Player _player, Engine _engine = null)
         {
             this.camera = _camera;
+            this.player = _player;
             this.engine = _engine;
         }
 
@@ -98,7 +100,7 @@ namespace skystride.vendor
                     AddLine("Console cleared");
                     break;
                 case "dev":
-                    if (camera.isPhysicsEnabled)
+                    if (player.isPhysicsEnabled)
                     {
                         AddLine("Developer mode activated!");
                     }
@@ -107,7 +109,7 @@ namespace skystride.vendor
                         AddLine("Developer mode deactivated!");
                     }
 
-                    camera.ToggleDevMode();
+                    player.ToggleDevMode();
                     break;
                 default:
                     if (low.StartsWith("map "))

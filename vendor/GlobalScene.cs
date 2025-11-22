@@ -242,7 +242,7 @@ namespace skystride.scenes
         }
 
         // Per-frame logic hook for scenes
-        public virtual void Update(float dt, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
+        public virtual void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
             // Update camera position reference for distance culling
             CurrentCameraPos = camera != null ? camera.position : Vector3.Zero;

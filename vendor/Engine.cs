@@ -57,7 +57,7 @@ namespace skystride.vendor
 
             camera = new Camera(new Vector3(0,5,3), Width / (float)Height);
 
-            gameConsole = new GameConsole(camera, this);
+            gameConsole = new GameConsole(camera, player, this);
 
             fog = new Fog(Color.DarkBlue, FogMode.Exp2,0.005f,30f,250f);
 
@@ -120,17 +120,20 @@ namespace skystride.vendor
             if (!CursorVisible && this.isMouseCentered && Focused && !gameConsole.IsOpen)
             {
                 Mouse.SetPosition(X + Width /2f, Y + Height /2f);
-                camera.UpdateMouseState(this.currentMouseState);
+                player.UpdateMouseState(this.currentMouseState);
             }
 
-            // Only update camera physics when console not active
+            // Only update player physics when console not active
             if (!gameConsole.IsOpen)
             {
-                camera.UpdatePhysics(currentKeyboardState, previousKeyboardState, (float)e.Time);
+                player.Update(currentKeyboardState, previousKeyboardState, (float)e.Time);
             }
 
+            // Sync camera with player
+            player.UpdateCamera(camera);
+
             // Scene update always (can be paused if desired later)
-            activeScene?.Update((float)e.Time, camera, currentKeyboardState, previousKeyboardState, currentMouseState, previousMouseState);
+            activeScene?.Update((float)e.Time, player, camera, currentKeyboardState, previousKeyboardState, currentMouseState, previousMouseState);
 
             // Update console after capturing key states
             gameConsole.Update(currentKeyboardState);
@@ -155,12 +158,12 @@ namespace skystride.vendor
             activeScene?.Render();
 
             // render first-person weapon before crosshair/UI
-            camera.RenderWeapon();
+            player.RenderWeapon(camera);
 
             // crosshair
             camera.RenderCrosshair(Width, Height);
 
-            TextRenderer.RenderText($"x = {camera.position.X}, y = {camera.position.Y}, z = {camera.position.Z}",16,24, Color.White, Width, Height);
+            TextRenderer.RenderText($"x = {player.position.X}, y = {player.position.Y}, z = {player.position.Z}",16,24, Color.White, Width, Height);
 
             // player info moved to left bottom
             TextRenderer.RenderText($"{player.GetHealth()}+",32, Height -64, Color.DarkOrange, Width, Height,32f);
@@ -191,7 +194,8 @@ namespace skystride.vendor
             activeScene?.Dispose();
             activeScene = newScene;
 
-            camera.SetPosition(new Vector3(0f, 5f, 3f));
+            player.SetPosition(new Vector3(0f, 5f, 3f));
+            player.UpdateCamera(camera);
             return true;
         }
     }
