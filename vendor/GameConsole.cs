@@ -153,12 +153,16 @@ namespace skystride.vendor
         {
             if (!_isOpen) return;
 
-            // Determine console height (limit to half the screen)
+            int maxLineCount = ((height - 20) / 22) - 2; // space available for stored lines (exclude input + padding)
+            if (maxLineCount < 0) maxLineCount = 0;
+            if (_lines.Count > maxLineCount && maxLineCount >= 0)
+            {
+                int removeCount = _lines.Count - maxLineCount;
+                _lines.RemoveRange(0, removeCount);
+            }
             int lineCount = _lines.Count + 2; // include input + padding
             int consoleHeight = lineCount * 22 + 20;
-            if (consoleHeight > height / 2) consoleHeight = height / 2;
 
-            // Set up2D orthographic projection for overlay
             GL.MatrixMode(MatrixMode.Projection);
             GL.PushMatrix();
             GL.LoadIdentity();
@@ -167,14 +171,14 @@ namespace skystride.vendor
             GL.PushMatrix();
             GL.LoadIdentity();
 
-            // Enable blending for opacity
+            // blending for opacity
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-            // Draw semi-transparent background quad
+            // semi-transparent background quad
             GL.Disable(EnableCap.DepthTest); // ensure overlay draws on top
             GL.Begin(PrimitiveType.Quads);
-            GL.Color4(0f, 0f, 0f, 0.6f); // black with60% opacity
+            GL.Color4(0f, 0f, 0f, 0.6f); // black with 60% opacity
             GL.Vertex2(0, 0);
             GL.Vertex2(width, 0);
             GL.Vertex2(width, consoleHeight);
