@@ -33,7 +33,7 @@ namespace skystride.scenes
             platform.SetTextureScale(20f, 20f);
             AddEntity(platform);
 
-            AddEntity(new Sphere(new Vector3(0f, 10f, 0f), 1f, Color.Red));
+            AddEntity(new Sphere(new Vector3(0f, 10f, 0f), 1f, 3f, Color.Red));
 
             Plane wallSpawn = new Plane(new Vector3(17f, 5.2f, 50f), 135f, 1f, 10f, Color.Brown, new Vector3(0f, 0f, 0f));
             wallSpawn.SetTexture("assets/textures/bricks.jpg");
