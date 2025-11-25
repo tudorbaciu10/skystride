@@ -12,6 +12,10 @@ namespace skystride.vendor
 {
     internal class Engine : GameWindow
     {
+        // global input gating
+        public static bool InputEnabled = true;
+        public static bool BlockShootOnce = false;
+
         // inits
         private KeyboardState currentKeyboardState, previousKeyboardState;
         private MouseState currentMouseState, previousMouseState;
@@ -68,6 +72,10 @@ namespace skystride.vendor
 
             CursorVisible = false;
             this.isMouseCentered = true;
+
+            // initialize input flags
+            InputEnabled = true;
+            BlockShootOnce = false;
         }
 
         protected override void OnUnload(EventArgs e)
@@ -106,16 +114,26 @@ namespace skystride.vendor
                 gameConsole.Toggle();
             }
 
-            if (currentKeyboardState[Key.Escape])
+            if (Focused && !gameConsole.IsOpen)
+            {
+                if (currentKeyboardState[Key.Escape])
+                {
+                    CursorVisible = true;
+                    this.isMouseCentered = false;
+                }
+
+                if (currentMouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
+                {
+                    CursorVisible = false;
+                    this.isMouseCentered = true;
+                }
+                InputEnabled = true;
+            }
+            else
             {
                 CursorVisible = true;
                 this.isMouseCentered = false;
-            }
-
-            if (currentMouseState.LeftButton == ButtonState.Pressed)
-            {
-                CursorVisible = false;
-                this.isMouseCentered = true;
+                InputEnabled = false;
             }
 
             if (!CursorVisible && this.isMouseCentered && Focused && !gameConsole.IsOpen)
@@ -141,6 +159,19 @@ namespace skystride.vendor
 
             this.previousKeyboardState = this.currentKeyboardState;
             this.previousMouseState = this.currentMouseState;
+        }
+
+        protected override void OnFocusedChanged(EventArgs e)
+        {
+            base.OnFocusedChanged(e);
+            if (!Focused)
+            {
+                CursorVisible = true;
+                this.isMouseCentered = false;
+
+                BlockShootOnce = true;
+                InputEnabled = false;
+            }
         }
 
         // on render frame event

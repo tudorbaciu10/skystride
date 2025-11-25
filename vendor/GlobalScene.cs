@@ -256,13 +256,25 @@ namespace skystride.scenes
                     me.Evaluate(CurrentCameraPos);
             }
 
-            // Handle shooting
+            // Handle shooting only when input is enabled (window focused & console closed)
             if (player != null)
             {
-                Bullet b = player.CheckShoot(currentMouse, previousMouse);
-                if (b != null)
+                if (Engine.InputEnabled)
                 {
-                    Bullets.Add(b);
+                    Bullet b = player.CheckShoot(currentMouse, previousMouse);
+                    if (b != null)
+                    {
+                        Bullets.Add(b);
+                    }
+                    // After a focused frame, clear one-shot block if it was set but no click occurred
+                    if (Engine.BlockShootOnce && !(currentMouse.LeftButton == ButtonState.Pressed && previousMouse.LeftButton == ButtonState.Released))
+                    {
+                        Engine.BlockShootOnce = false;
+                    }
+                }
+                else
+                {
+                    // keep previous mouse state sync to avoid stale edge when focus returns
                 }
             }
 

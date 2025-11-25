@@ -1,6 +1,7 @@
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using skystride.forms;
 using skystride.shaders;
 using System.Collections.Generic;
 using System.Drawing;
@@ -102,6 +103,10 @@ namespace skystride.vendor
                 case "clear":
                     _lines.Clear();
                     AddLine("Console cleared");
+                    break;
+                case "mapeditor":
+                    MapEditor form = new MapEditor();
+                    form.Show();
                     break;
                 case "dev":
                     if (player.isPhysicsEnabled)

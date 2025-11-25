@@ -278,7 +278,15 @@ namespace skystride.vendor
 
         public Bullet CheckShoot(MouseState current, MouseState previous)
         {
-            if (attachedWeapon != null && current.IsButtonDown(MouseButton.Left) && !previous.IsButtonDown(MouseButton.Left))
+            bool edgeClick = current.IsButtonDown(MouseButton.Left) && !previous.IsButtonDown(MouseButton.Left);
+
+            if (edgeClick && Engine.BlockShootOnce)
+            {
+                Engine.BlockShootOnce = false;
+                return null;
+            }
+
+            if (attachedWeapon != null && edgeClick)
             {
                 return attachedWeapon.Shoot(this.position, this.front, this.up, this.right);
             }
