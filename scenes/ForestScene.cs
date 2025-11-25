@@ -12,13 +12,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using skystride.objects.weapons.pistols;
+using skystride.objects.weapons.shotguns;
 
 namespace skystride.scenes
 {
     internal class ForestScene : GlobalScene
     {
         private Skybox _sky;
-        private Glock _glock;
+        private Shotgun _shotgun;
 
         private float _movingBoxDirection =1f; //1 = right, -1 = left
         private ModelEntity movingBox = new ModelEntity("/assets/models/box.obj", "/assets/models/box.jpg", new Vector3(-90f, -3f,96f),7f,0f,0f,0f,1f,1f);
@@ -103,7 +104,7 @@ namespace skystride.scenes
 
             AddEntity(new Rain(count: 2000, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 12f, maxSpeed: 24f));
 
-            _glock = new Glock();
+            _shotgun = new Shotgun();
         }
 
         public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
@@ -144,9 +145,9 @@ namespace skystride.scenes
             }
 
             // attach weapon once
-            if (player != null && _glock != null && !player.HasAttachedWeapon())
+            if (player != null && _shotgun != null && !player.HasAttachedWeapon())
             {
-                player.AttachWeapon(_glock);
+                player.AttachWeapon(_shotgun);
             }
         }
 

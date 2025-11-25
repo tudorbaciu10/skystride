@@ -11,6 +11,7 @@ namespace skystride.objects.weapons
         protected Model model;
 
         protected Vector3 viewOffset = new Vector3(0.6f, -0.6f, -1.6f);
+        protected Vector3 rotation = Vector3.Zero;
         protected float scale = 0.25f;
 
         public Weapon(string name, int ammo, int damage)
@@ -26,9 +27,9 @@ namespace skystride.objects.weapons
         {
             if (model == null || !model.Loaded || _camera == null) return;
 
-            float rotX = 0f;
-            float rotY = 0f;
-            model.Render(viewOffset, scale, rotX, rotY, 0f);
+            float rotX = rotation.X;
+            float rotY = rotation.Y;
+            model.Render(viewOffset, scale, rotX, rotY, rotation.Z);
         }
 
         public virtual Bullet Shoot(Vector3 playerPos, Vector3 front, Vector3 up, Vector3 right)
