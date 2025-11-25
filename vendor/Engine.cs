@@ -120,21 +120,28 @@ namespace skystride.vendor
                 MapEditor.LaunchOrFocus();
             }
 
-            if (Focused && !gameConsole.IsOpen)
+            if (Focused)
             {
-                if (currentKeyboardState[Key.Escape])
+                if (!gameConsole.IsOpen)
                 {
-                    CursorVisible = true;
-                    this.isMouseCentered = false;
-                }
+                    if (currentKeyboardState[Key.Escape])
+                    {
+                        CursorVisible = true;
+                        this.isMouseCentered = false;
+                    }
 
-                if (currentMouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
+                    if (currentMouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
+                    {
+                        CursorVisible = false;
+                        this.isMouseCentered = true;
+                    }
+
+                    InputEnabled = !skystride.forms.MapEditor.EditorHasFocus;
+                }
+                else
                 {
-                    CursorVisible = false;
-                    this.isMouseCentered = true;
+                    InputEnabled = false;
                 }
-
-                InputEnabled = !skystride.forms.MapEditor.EditorHasFocus;
             }
             else
             {
