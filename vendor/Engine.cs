@@ -117,7 +117,7 @@ namespace skystride.vendor
 
             if (currentKeyboardState.IsKeyDown(Key.F3) && !previousKeyboardState.IsKeyDown(Key.F3))
             {
-                MapEditor.LaunchOrFocus();
+                MapEditor.LaunchOrFocus(player);
             }
 
             if (Focused)

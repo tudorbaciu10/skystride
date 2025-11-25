@@ -7,6 +7,7 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using skystride.vendor;
 using skystride.scenes;
+using skystride.objects.templates;
 
 namespace skystride.forms
 {
@@ -22,7 +23,7 @@ namespace skystride.forms
             get { return _instance != null && !_instance.IsDisposed; }
         }
 
-        public static void LaunchOrFocus()
+        internal static void LaunchOrFocus(Player playerRef)
         {
             if (IsRunning)
             {
@@ -30,6 +31,7 @@ namespace skystride.forms
                 {
                     _instance.BeginInvoke((Action)(() =>
                     {
+                        _instance.trackedPlayer = playerRef;
                         if (_instance.WindowState == FormWindowState.Minimized)
                             _instance.WindowState = FormWindowState.Normal;
                         _instance.BringToFront();
@@ -44,7 +46,7 @@ namespace skystride.forms
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                _instance = new MapEditor();
+                _instance = new MapEditor(playerRef);
                 _instance.Activated += (s, e) => EditorHasFocus = true;
                 _instance.Deactivate += (s, e) => EditorHasFocus = false;
                 _instance.FormClosed += (s, e) => EditorHasFocus = false;
@@ -63,6 +65,8 @@ namespace skystride.forms
         // editor camera & scene
         private Camera editorCamera;
         private GlobalScene activeScene;
+        private Player trackedPlayer;
+        private Sphere playerMarker;
 
         // render/update
         private Timer renderTimer;
@@ -81,6 +85,12 @@ namespace skystride.forms
         public MapEditor()
         {
             InitializeComponent();
+        }
+
+        internal MapEditor(Player player)
+            : this()
+        {
+            this.trackedPlayer = player;
         }
 
         private void glControlMapEditor_Load(object sender, EventArgs e)
@@ -104,6 +114,9 @@ namespace skystride.forms
 
             // load same environment as engine
             activeScene = new ForestScene();
+
+            // player marker (white sphere)
+            playerMarker = new Sphere(new Vector3(0f, 0.5f, 0f), 0.5f, 1f, Color.White);
 
             // hook control events for input/render
             glControlMapEditor.Resize += GlControlMapEditor_Resize;
@@ -198,6 +211,14 @@ namespace skystride.forms
             GL.LoadMatrix(ref view);
 
             activeScene?.Render();
+
+            // draw tracked player marker
+            if (trackedPlayer != null && playerMarker != null)
+            {
+                // mirror player's current position
+                playerMarker.SetPosition(trackedPlayer.position);
+                playerMarker.Render();
+            }
 
             glControlMapEditor.SwapBuffers();
         }
