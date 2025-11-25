@@ -240,6 +240,13 @@ namespace skystride.scenes
                 return;
             }
 
+            var sphere = entity as Sphere;
+            if (sphere != null) {
+                float radius = sphere.GetRadius();
+                Colliders.Add(new AABB(sphere.GetPosition(), new Vector3(radius *2f, radius *2f, radius *2f)));
+                return;
+            }
+
             // other entity types can be added here
         }
 

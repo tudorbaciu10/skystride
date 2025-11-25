@@ -182,7 +182,6 @@ namespace skystride.forms
                 UpdateCameraMovement(dt);
             }
 
-            // Update scene (no player/editor input into scene for now)
             activeScene?.Update(dt, null, editorCamera,
                 default(OpenTK.Input.KeyboardState), default(OpenTK.Input.KeyboardState),
                 default(OpenTK.Input.MouseState), default(OpenTK.Input.MouseState));
