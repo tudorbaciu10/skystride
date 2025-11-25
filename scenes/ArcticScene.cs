@@ -67,7 +67,10 @@ namespace skystride.scenes
         {
             base.Update(dt, player, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse);
 
-            player.ResolveCollisions(Colliders);
+            if (player != null)
+            {
+                player.ResolveCollisions(Colliders);
+            }
         }
 
         public override void Render()

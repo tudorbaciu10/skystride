@@ -262,6 +262,7 @@ namespace skystride.vendor
 
             player.SetPosition(new Vector3(0f, 5f, 3f));
             player.UpdateCamera(camera);
+            MapEditor.UpdateScene(mapName);
             return true;
         }
     }

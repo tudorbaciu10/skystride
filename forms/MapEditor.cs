@@ -62,6 +62,21 @@ namespace skystride.forms
             _uiThread.Start();
         }
 
+        internal static void UpdateScene(string mapName)
+        {
+            if (IsRunning)
+            {
+                try
+                {
+                    _instance.BeginInvoke((Action)(() =>
+                    {
+                        _instance.LoadScene(mapName);
+                    }));
+                }
+                catch { }
+            }
+        }
+
         // editor camera & scene
         private Camera editorCamera;
         private GlobalScene activeScene;
@@ -340,6 +355,27 @@ namespace skystride.forms
                 isMouseLook = false;
             }
             try { Cursor.Show(); } catch { }
+        }
+
+
+        private void LoadScene(string mapName)
+        {
+            string key = (mapName ?? string.Empty).Trim().ToLowerInvariant();
+            GlobalScene newScene = null;
+            switch (key)
+            {
+                case "forest":
+                    newScene = new ForestScene();
+                    break;
+                case "arctic":
+                    newScene = new ArcticScene();
+                    break;
+                default:
+                    return;
+            }
+
+            activeScene?.Dispose();
+            activeScene = newScene;
         }
     }
 }
