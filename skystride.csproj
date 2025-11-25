@@ -47,7 +47,7 @@
     <Compile Include="objects\weapons\Weapon.cs" />
     <Compile Include="objects\weapons\Bullet.cs" />
     <Compile Include="scenes\ForestScene.cs" />
-    <Compile Include="shaders\Lightning.cs" />
+    <Compile Include="shaders\Lighting.cs" />
     <Compile Include="shaders\Rain.cs" />
     <Compile Include="vendor\GameConsole.cs" />
     <Compile Include="vendor\Player.cs" />
