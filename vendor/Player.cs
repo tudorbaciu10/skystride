@@ -288,7 +288,18 @@ namespace skystride.vendor
 
             if (attachedWeapon != null && edgeClick)
             {
-                return attachedWeapon.Shoot(this.position, this.front, this.up, this.right);
+                Bullet b = attachedWeapon.Shoot(this.position, this.front, this.up, this.right);
+                if (b != null)
+                {
+                    float force = attachedWeapon.RecoilForce;
+                    if (force > 0f)
+                    {
+                        // Push player back
+                        Vector3 pushDir = -this.front;
+                        this.velocity += pushDir * force;
+                    }
+                }
+                return b;
             }
             return null;
         }

@@ -18,6 +18,7 @@ namespace skystride.objects.weapons.shotguns
             this.viewOffset = new Vector3(0.9f, -0.7f, -1.8f); 
             this.scale = 0.25f;
             this.rotation = new Vector3(0f, -90f, 0f);
+            this.recoilForce = 20f;
         }
     }
 }
