@@ -18,6 +18,7 @@ namespace skystride.vendor
 
         // main instances
         Camera camera;
+        public Lightning lightning = new Lightning();
         Player player = new Player();
         private bool isMouseCentered = false;
 
@@ -153,16 +154,19 @@ namespace skystride.vendor
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref viewMatrix);
 
-            this.fog.Render();
-
             activeScene?.Render();
+            lightning.Render();
 
-            // render first-person weapon before crosshair/UI
-            player.RenderWeapon(camera);
+            this.fog.Render();
 
             // crosshair
             camera.RenderCrosshair(Width, Height);
 
+            // render first-person weapon before crosshair/UI
+            player.RenderWeapon(camera);
+
+
+            GL.Disable(EnableCap.Lighting);
             TextRenderer.RenderText($"x = {player.position.X}, y = {player.position.Y}, z = {player.position.Z}",16,24, Color.White, Width, Height);
 
             // player info moved to left bottom
@@ -176,8 +180,9 @@ namespace skystride.vendor
                 TextRenderer.RenderText(ammoText, Width - (int)textWidth - 32, Height - 64, Color.DarkOrange, Width, Height, fontSize);
             }
 
-            // Render console overlay last
+            // Render console overlay 
             gameConsole.Render(Width, Height);
+            if(lightning.enabled) GL.Enable(EnableCap.Lighting);
 
             SwapBuffers();
         }

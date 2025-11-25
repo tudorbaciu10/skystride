@@ -1,6 +1,7 @@
-using OpenTK.Input;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
+using skystride.shaders;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
@@ -95,6 +96,9 @@ namespace skystride.vendor
                 case "hello":
                     AddLine("Hello from console.");
                     break;
+                case "help":
+                    AddLine("Available commands: hello, help, clear, dev, map [name], light [1|0]");
+                    break;
                 case "clear":
                     _lines.Clear();
                     AddLine("Console cleared");
@@ -130,6 +134,45 @@ namespace skystride.vendor
                                 AddLine("Loaded map: " + mapName);
                             else
                                 AddLine("Unknown map. Available: forest, arctic");
+                        }
+                    } else if (low.StartsWith("light "))
+                    {
+                        string boolLight = low.Substring("light ".Length).Trim();
+                        if (engine == null)
+                        {
+                            AddLine("Lightning switching unavailable (no engine reference).");
+                        }
+                        else if (string.IsNullOrEmpty(boolLight))
+                        {
+                            AddLine("Usage: light 1 | 0");
+                        }
+                        else
+                        {
+                            bool enable;
+                            if (boolLight == "1" || boolLight == "true")
+                            {
+                                enable = true;
+                            }
+                            else if (boolLight == "0" || boolLight == "false")
+                            {
+                                enable = false;
+                            }
+                            else
+                            {
+                                AddLine("Invalid value. Usage: light 1 | 0");
+                                return;
+                            }
+
+                            if (enable)
+                            {
+                                engine.lightning.Enable();
+                                AddLine("Lightning enabled");
+                            }
+                            else
+                            {
+                                engine.lightning.Disable();
+                                AddLine("Lightning disabled");
+                            }
                         }
                     }
                     else
