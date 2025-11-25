@@ -425,44 +425,71 @@ namespace skystride.forms
         {
             if (!glControlMapEditor.Focused) glControlMapEditor.Focus();
             
-            if (e.Button == MouseButtons.Left && selectedEntity != null)
+            if (e.Button == MouseButtons.Left)
             {
                 Ray ray = GetPickRay(e.X, e.Y);
-                GizmoAxis hit = gizmo.CheckIntersection(ray, selectedEntity.GetPosition());
-                if (hit != GizmoAxis.None)
+                
+                if (selectedEntity != null)
                 {
-                    isDraggingGizmo = true;
-                    dragAxis = hit;
-                    gizmo.SetSelectedAxis(hit);
-                    dragStartPos = selectedEntity.GetPosition();
-                    
-                    // Determine drag plane
-                    Vector3 viewDir = editorCamera.front;
-                    dragPlanePoint = dragStartPos;
+                    GizmoAxis hit = gizmo.CheckIntersection(ray, selectedEntity.GetPosition());
+                    if (hit != GizmoAxis.None)
+                    {
+                        isDraggingGizmo = true;
+                        dragAxis = hit;
+                        gizmo.SetSelectedAxis(hit);
+                        dragStartPos = selectedEntity.GetPosition();
+                        
+                        // Determine drag plane
+                        Vector3 viewDir = editorCamera.front;
+                        dragPlanePoint = dragStartPos;
 
-                    if (dragAxis == GizmoAxis.X)
-                    {
-                        dragPlaneNormal = Math.Abs(viewDir.Y) > Math.Abs(viewDir.Z) ? Vector3.UnitY : Vector3.UnitZ;
-                    }
-                    else if (dragAxis == GizmoAxis.Y)
-                    {
-                        dragPlaneNormal = Math.Abs(viewDir.X) > Math.Abs(viewDir.Z) ? Vector3.UnitX : Vector3.UnitZ;
-                    }
-                    else // Z
-                    {
-                        dragPlaneNormal = Math.Abs(viewDir.X) > Math.Abs(viewDir.Y) ? Vector3.UnitX : Vector3.UnitY;
-                    }
+                        if (dragAxis == GizmoAxis.X)
+                        {
+                            dragPlaneNormal = Math.Abs(viewDir.Y) > Math.Abs(viewDir.Z) ? Vector3.UnitY : Vector3.UnitZ;
+                        }
+                        else if (dragAxis == GizmoAxis.Y)
+                        {
+                            dragPlaneNormal = Math.Abs(viewDir.X) > Math.Abs(viewDir.Z) ? Vector3.UnitX : Vector3.UnitZ;
+                        }
+                        else // Z
+                        {
+                            dragPlaneNormal = Math.Abs(viewDir.X) > Math.Abs(viewDir.Y) ? Vector3.UnitX : Vector3.UnitY;
+                        }
 
-                    var hitPoint = IntersectPlane(ray, dragPlaneNormal, dragPlanePoint);
-                    if (hitPoint.HasValue)
-                    {
-                        dragStartHitPoint = hitPoint.Value;
+                        var hitPoint = IntersectPlane(ray, dragPlaneNormal, dragPlanePoint);
+                        if (hitPoint.HasValue)
+                        {
+                            dragStartHitPoint = hitPoint.Value;
+                        }
+                        else
+                        {
+                            isDraggingGizmo = false; // Should not happen if we hit the gizmo
+                        }
+                        return; // Consume event
                     }
-                    else
+                }
+
+                ISceneEntity closest = GetClosestEntity(ray);
+                if (closest != null)
+                {
+                    selectedEntity = closest;
+                    // Sync ListBox
+                    if (activeScene != null)
                     {
-                        isDraggingGizmo = false; // Should not happen if we hit the gizmo
+                        var list = activeScene.GetEntities();
+                        int idx = list.IndexOf(closest);
+                        if (idx >= 0 && idx < lstEntities.Items.Count)
+                        {
+                            lstEntities.SelectedIndex = idx;
+                        }
                     }
-                    return; // Consume event
+                    UpdatePositionControls();
+                }
+                else
+                {
+                    // Deselect if clicked on empty space
+                    selectedEntity = null;
+                    lstEntities.SelectedIndex = -1;
                 }
             }
 
@@ -472,6 +499,116 @@ namespace skystride.forms
                 lastMousePos = e.Location;
                 Cursor.Hide();
             }
+        }
+
+        private ISceneEntity GetClosestEntity(Ray ray)
+        {
+            if (activeScene == null) return null;
+
+            ISceneEntity closestEntity = null;
+            float closestDist = float.MaxValue;
+
+            var entities = activeScene.GetEntities();
+            foreach (var entity in entities)
+            {
+                float dist = float.MaxValue;
+                bool hit = false;
+
+                if (entity is Cube cube)
+                {
+                    float s = cube.GetSize();
+                    Vector3 pos = cube.GetPosition();
+                    Vector3 min = pos - new Vector3(s / 2f);
+                    Vector3 max = pos + new Vector3(s / 2f);
+                    hit = RayIntersectsAABB(ray, min, max, out dist);
+                }
+                else if (entity is Sphere sphere)
+                {
+                    hit = RayIntersectsSphere(ray, sphere.GetPosition(), sphere.GetRadius(), out dist);
+                }
+                else if (entity is Plane plane)
+                {
+                    // Treat plane as thin AABB
+                    Vector3 size = plane.GetSize();
+                    Vector3 pos = plane.GetPosition();
+                   
+                    float sx = Math.Max(size.X, 0.1f);
+                    float sy = Math.Max(size.Y, 0.1f); // planes usually flat on Y or Z depending on rotation, but size is dimensions
+                    float sz = Math.Max(size.Z, 0.1f);
+                    
+                  
+                    float maxDim = Math.Max(sx, Math.Max(sy, sz));
+                    Vector3 min = pos - new Vector3(maxDim / 2f);
+                    Vector3 max = pos + new Vector3(maxDim / 2f);
+                    hit = RayIntersectsAABB(ray, min, max, out dist);
+                }
+                else if (entity.GetType().Name == "ModelEntity") // Reflection or check type if public
+                {
+                    Vector3 pos = entity.GetPosition();
+                    Vector3 min = pos - new Vector3(1f);
+                    Vector3 max = pos + new Vector3(1f);
+                    hit = RayIntersectsAABB(ray, min, max, out dist);
+                }
+
+                if (hit && dist < closestDist)
+                {
+                    closestDist = dist;
+                    closestEntity = entity;
+                }
+            }
+
+            return closestEntity;
+        }
+
+        private bool RayIntersectsAABB(Ray ray, Vector3 min, Vector3 max, out float distance)
+        {
+            distance = 0f;
+            float tmin = (min.X - ray.Origin.X) / ray.Direction.X;
+            float tmax = (max.X - ray.Origin.X) / ray.Direction.X;
+
+            if (tmin > tmax) { float temp = tmin; tmin = tmax; tmax = temp; }
+
+            float tymin = (min.Y - ray.Origin.Y) / ray.Direction.Y;
+            float tymax = (max.Y - ray.Origin.Y) / ray.Direction.Y;
+
+            if (tymin > tymax) { float temp = tymin; tymin = tymax; tymax = temp; }
+
+            if ((tmin > tymax) || (tymin > tmax)) return false;
+
+            if (tymin > tmin) tmin = tymin;
+            if (tymax < tmax) tmax = tymax;
+
+            float tzmin = (min.Z - ray.Origin.Z) / ray.Direction.Z;
+            float tzmax = (max.Z - ray.Origin.Z) / ray.Direction.Z;
+
+            if (tzmin > tzmax) { float temp = tzmin; tzmin = tzmax; tzmax = temp; }
+
+            if ((tmin > tzmax) || (tzmin > tmax)) return false;
+
+            if (tzmin > tmin) tmin = tzmin;
+            if (tzmax < tmax) tmax = tzmax;
+
+            if (tmax < 0) return false; // Box is behind ray
+
+            distance = tmin >= 0 ? tmin : tmax;
+            return true;
+        }
+
+        private bool RayIntersectsSphere(Ray ray, Vector3 center, float radius, out float distance)
+        {
+            distance = 0f;
+            Vector3 m = ray.Origin - center;
+            float b = Vector3.Dot(m, ray.Direction);
+            float c = Vector3.Dot(m, m) - radius * radius;
+
+            if (c > 0.0f && b > 0.0f) return false;
+
+            float discr = b * b - c;
+            if (discr < 0.0f) return false;
+
+            distance = -b - (float)Math.Sqrt(discr);
+            if (distance < 0.0f) distance = 0.0f;
+            return true;
         }
 
         private void GlControlMapEditor_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
