@@ -8,6 +8,7 @@ using OpenTK.Graphics.OpenGL;
 using skystride.vendor;
 using skystride.scenes;
 using skystride.objects.templates;
+using skystride.objects;
 
 namespace skystride.forms
 {
@@ -61,22 +62,6 @@ namespace skystride.forms
             _uiThread.SetApartmentState(System.Threading.ApartmentState.STA);
             _uiThread.Start();
         }
-
-        internal static void UpdateScene(string mapName)
-        {
-            if (IsRunning)
-            {
-                try
-                {
-                    _instance.BeginInvoke((Action)(() =>
-                    {
-                        _instance.LoadScene(mapName);
-                    }));
-                }
-                catch { }
-            }
-        }
-
         // editor camera & scene
         private Camera editorCamera;
         private GlobalScene activeScene;
@@ -176,6 +161,21 @@ namespace skystride.forms
             InitializeEditorUI();
         }
 
+        internal static void UpdateScene(string mapName)
+        {
+            if (IsRunning)
+            {
+                try
+                {
+                    _instance.BeginInvoke((Action)(() =>
+                    {
+                        _instance.LoadScene(mapName);
+                    }));
+                }
+                catch { }
+            }
+        }
+
         private void GlControlMapEditor_Disposed(object sender, EventArgs e)
         {
             try { activeScene?.Dispose(); } catch { }
@@ -244,6 +244,12 @@ namespace skystride.forms
                 // mirror player's current position
                 playerMarker.SetPosition(trackedPlayer.position);
                 playerMarker.Render();
+            }
+
+            // Render Gizmo
+            if (selectedEntity != null)
+            {
+                gizmo.Render(selectedEntity.GetPosition());
             }
 
             glControlMapEditor.SwapBuffers();
@@ -327,68 +333,15 @@ namespace skystride.forms
             pressedKeys.Remove(e.KeyCode);
         }
 
-        private void GlControlMapEditor_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            if (!glControlMapEditor.Focused) glControlMapEditor.Focus();
-            if (e.Button == MouseButtons.Right)
-            {
-                isMouseLook = true;
-                lastMousePos = e.Location;
-                Cursor.Hide();
-            }
-        }
+        // gizmo
+        private EditorGizmo gizmo = new EditorGizmo();
+        private bool isDraggingGizmo = false;
+        private GizmoAxis dragAxis = GizmoAxis.None;
+        private Vector3 dragStartPos;
+        private Vector3 dragPlaneNormal;
+        private Vector3 dragPlanePoint;
+        private Vector3 dragStartHitPoint;
 
-        private void GlControlMapEditor_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                isMouseLook = false;
-                Cursor.Show();
-            }
-        }
-
-        private void GlControlMapEditor_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            if (!isMouseLook) return;
-            var dx = e.X - lastMousePos.X;
-            var dy = e.Y - lastMousePos.Y;
-            lastMousePos = e.Location;
-
-            yaw += dx * mouseSensitivity;
-            pitch -= dy * mouseSensitivity;
-            pitch = MathHelper.Clamp(pitch, -89f, 89f);
-        }
-
-        private void ExitMouseLook()
-        {
-            if (isMouseLook)
-            {
-                isMouseLook = false;
-            }
-            try { Cursor.Show(); } catch { }
-        }
-
-
-        private void LoadScene(string mapName)
-        {
-            string key = (mapName ?? string.Empty).Trim().ToLowerInvariant();
-            GlobalScene newScene = null;
-            switch (key)
-            {
-                case "forest":
-                    newScene = new ForestScene();
-                    break;
-                case "arctic":
-                    newScene = new ArcticScene();
-                    break;
-                default:
-                    return;
-            }
-
-            activeScene?.Dispose();
-            activeScene = newScene;
-            RefreshEntityList();
-        }
         private void InitializeEditorUI()
         {
             glControlMapEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -433,6 +386,184 @@ namespace skystride.forms
 
             RefreshEntityList();
         }
+
+        private Ray GetPickRay(int mouseX, int mouseY)
+        {
+            if (glControlMapEditor.Width == 0 || glControlMapEditor.Height == 0) return new Ray();
+
+            float x = (2.0f * mouseX) / glControlMapEditor.Width - 1.0f;
+            float y = 1.0f - (2.0f * mouseY) / glControlMapEditor.Height;
+            Vector4 rayClip = new Vector4(x, y, -1.0f, 1.0f);
+
+            Matrix4 proj = editorCamera.GetProjectionMatrix();
+            Matrix4 view = editorCamera.GetViewMatrix();
+
+            Matrix4 invProj = Matrix4.Invert(proj);
+            Vector4 rayEye = Vector4.Transform(rayClip, invProj);
+            rayEye = new Vector4(rayEye.X, rayEye.Y, -1.0f, 0.0f);
+
+            Matrix4 invView = Matrix4.Invert(view);
+            Vector4 rayWorld = Vector4.Transform(rayEye, invView);
+            Vector3 rayDir = new Vector3(rayWorld.X, rayWorld.Y, rayWorld.Z);
+            if (rayDir.LengthSquared > 0) rayDir.Normalize();
+
+            return new Ray(editorCamera.position, rayDir);
+        }
+
+        private Vector3? IntersectPlane(Ray ray, Vector3 planeNormal, Vector3 planePoint)
+        {
+            float denom = Vector3.Dot(planeNormal, ray.Direction);
+            if (Math.Abs(denom) > 0.0001f)
+            {
+                float t = Vector3.Dot(planePoint - ray.Origin, planeNormal) / denom;
+                if (t >= 0) return ray.Origin + ray.Direction * t;
+            }
+            return null;
+        }
+
+        private void GlControlMapEditor_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (!glControlMapEditor.Focused) glControlMapEditor.Focus();
+            
+            if (e.Button == MouseButtons.Left && selectedEntity != null)
+            {
+                Ray ray = GetPickRay(e.X, e.Y);
+                GizmoAxis hit = gizmo.CheckIntersection(ray, selectedEntity.GetPosition());
+                if (hit != GizmoAxis.None)
+                {
+                    isDraggingGizmo = true;
+                    dragAxis = hit;
+                    gizmo.SetSelectedAxis(hit);
+                    dragStartPos = selectedEntity.GetPosition();
+                    
+                    // Determine drag plane
+                    Vector3 viewDir = editorCamera.front;
+                    dragPlanePoint = dragStartPos;
+
+                    if (dragAxis == GizmoAxis.X)
+                    {
+                        dragPlaneNormal = Math.Abs(viewDir.Y) > Math.Abs(viewDir.Z) ? Vector3.UnitY : Vector3.UnitZ;
+                    }
+                    else if (dragAxis == GizmoAxis.Y)
+                    {
+                        dragPlaneNormal = Math.Abs(viewDir.X) > Math.Abs(viewDir.Z) ? Vector3.UnitX : Vector3.UnitZ;
+                    }
+                    else // Z
+                    {
+                        dragPlaneNormal = Math.Abs(viewDir.X) > Math.Abs(viewDir.Y) ? Vector3.UnitX : Vector3.UnitY;
+                    }
+
+                    var hitPoint = IntersectPlane(ray, dragPlaneNormal, dragPlanePoint);
+                    if (hitPoint.HasValue)
+                    {
+                        dragStartHitPoint = hitPoint.Value;
+                    }
+                    else
+                    {
+                        isDraggingGizmo = false; // Should not happen if we hit the gizmo
+                    }
+                    return; // Consume event
+                }
+            }
+
+            if (e.Button == MouseButtons.Right)
+            {
+                isMouseLook = true;
+                lastMousePos = e.Location;
+                Cursor.Hide();
+            }
+        }
+
+        private void GlControlMapEditor_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (isDraggingGizmo && e.Button == MouseButtons.Left)
+            {
+                isDraggingGizmo = false;
+                dragAxis = GizmoAxis.None;
+                gizmo.SetSelectedAxis(GizmoAxis.None);
+            }
+
+            if (e.Button == MouseButtons.Right)
+            {
+                isMouseLook = false;
+                Cursor.Show();
+            }
+        }
+
+        private void GlControlMapEditor_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (isDraggingGizmo && selectedEntity != null)
+            {
+                Ray ray = GetPickRay(e.X, e.Y);
+                var hitPoint = IntersectPlane(ray, dragPlaneNormal, dragPlanePoint);
+                if (hitPoint.HasValue)
+                {
+                    Vector3 currentHitPoint = hitPoint.Value;
+                    Vector3 delta = currentHitPoint - dragStartHitPoint;
+                    Vector3 newPos = dragStartPos;
+
+                    if (dragAxis == GizmoAxis.X) newPos.X += delta.X;
+                    if (dragAxis == GizmoAxis.Y) newPos.Y += delta.Y;
+                    if (dragAxis == GizmoAxis.Z) newPos.Z += delta.Z;
+
+                    selectedEntity.SetPosition(newPos);
+                    UpdatePositionControls();
+                }
+                return;
+            }
+
+            if (!isMouseLook)
+            {
+                // Hover effect
+                if (selectedEntity != null && !isDraggingGizmo)
+                {
+                    Ray ray = GetPickRay(e.X, e.Y);
+                    GizmoAxis hit = gizmo.CheckIntersection(ray, selectedEntity.GetPosition());
+                    gizmo.SetSelectedAxis(hit);
+                }
+                return;
+            }
+
+            var dx = e.X - lastMousePos.X;
+            var dy = e.Y - lastMousePos.Y;
+            lastMousePos = e.Location;
+
+            yaw += dx * mouseSensitivity;
+            pitch -= dy * mouseSensitivity;
+            pitch = MathHelper.Clamp(pitch, -89f, 89f);
+        }
+
+        private void ExitMouseLook()
+        {
+            if (isMouseLook)
+            {
+                isMouseLook = false;
+            }
+            try { Cursor.Show(); } catch { }
+        }
+
+
+        private void LoadScene(string mapName)
+        {
+            string key = (mapName ?? string.Empty).Trim().ToLowerInvariant();
+            GlobalScene newScene = null;
+            switch (key)
+            {
+                case "forest":
+                    newScene = new ForestScene();
+                    break;
+                case "arctic":
+                    newScene = new ArcticScene();
+                    break;
+                default:
+                    return;
+            }
+
+            activeScene?.Dispose();
+            activeScene = newScene;
+            RefreshEntityList();
+        }
+
 
         private NumericUpDown CreateNumeric(Control parent, int x, int y)
         {
