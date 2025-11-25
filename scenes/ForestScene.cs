@@ -110,9 +110,13 @@ namespace skystride.scenes
         {
             base.Update(dt, player, camera, currentKeyboard, previousKeyboard, currentMouse, previousMouse); // ensures lazy evaluation & camera pos update
 
-            if (player.position.Y < -8f)
+            // player can be null in editor contexts
+            if (player != null)
             {
-                player.SetPosition(new Vector3(0f, 10f, 0f));
+                if (player.position.Y < -8f)
+                {
+                    player.SetPosition(new Vector3(0f, 10f, 0f));
+                }
             }
 
             // moving box logic
@@ -134,7 +138,10 @@ namespace skystride.scenes
                 movingBox.SetPosition(boxPos);
             }
 
-            player.ResolveCollisions(Colliders);
+            if (player != null)
+            {
+                player.ResolveCollisions(Colliders);
+            }
 
             // attach weapon once
             if (player != null && _glock != null && !player.HasAttachedWeapon())

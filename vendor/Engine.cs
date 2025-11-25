@@ -7,6 +7,7 @@ using System.Drawing;
 using skystride.objects.templates;
 using skystride.scenes;
 using skystride.shaders;
+using skystride.forms;
 
 namespace skystride.vendor
 {
@@ -114,6 +115,11 @@ namespace skystride.vendor
                 gameConsole.Toggle();
             }
 
+            if (currentKeyboardState.IsKeyDown(Key.F3) && !previousKeyboardState.IsKeyDown(Key.F3))
+            {
+                MapEditor.LaunchOrFocus();
+            }
+
             if (Focused && !gameConsole.IsOpen)
             {
                 if (currentKeyboardState[Key.Escape])
@@ -127,7 +133,8 @@ namespace skystride.vendor
                     CursorVisible = false;
                     this.isMouseCentered = true;
                 }
-                InputEnabled = true;
+
+                InputEnabled = !skystride.forms.MapEditor.EditorHasFocus;
             }
             else
             {
@@ -142,8 +149,7 @@ namespace skystride.vendor
                 player.UpdateMouseState(this.currentMouseState);
             }
 
-            // Only update player physics when console not active
-            if (!gameConsole.IsOpen)
+            if (!gameConsole.IsOpen && InputEnabled)
             {
                 player.Update(currentKeyboardState, previousKeyboardState, (float)e.Time);
             }
@@ -171,6 +177,16 @@ namespace skystride.vendor
 
                 BlockShootOnce = true;
                 InputEnabled = false;
+            }
+            else
+            {
+                if (!gameConsole.IsOpen)
+                {
+                    CursorVisible = false;
+                    this.isMouseCentered = true;
+                    BlockShootOnce = true; // prevent accidental shot on focus regain
+                    InputEnabled = true;
+                }
             }
         }
 
