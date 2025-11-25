@@ -25,6 +25,8 @@ namespace skystride.objects.templates
 
         public Vector3 GetPosition() { return Vector3.Zero; }
         public void SetPosition(Vector3 pos) { }
+        public Vector3 GetSize() { return Vector3.Zero; }
+        public void SetSize(Vector3 size) { }
 
         public void Render()
         {

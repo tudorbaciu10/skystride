@@ -44,6 +44,8 @@ namespace skystride.shaders
 
         public Vector3 GetPosition() { return Vector3.Zero; }
         public void SetPosition(Vector3 pos) { }
+        public Vector3 GetSize() { return Vector3.Zero; }
+        public void SetSize(Vector3 size) { }
 
         public Snow(int count = 1500, float areaSize = 80f, float spawnHeight = 35f, float groundY = 0f,
  float minSpeed = 2.0f, float maxSpeed = 6.0f, float minSize = 2.5f, float maxSize = 5.0f, float sizeScale = 2.0f)

@@ -150,6 +150,13 @@ namespace skystride.scenes
 
             public Vector3 GetPosition() { return _position; }
             public Vector3 GetSize() { return _model != null ? _model.BoundsSize * _scale : Vector3.Zero; }
+            public void SetSize(Vector3 size) 
+            { 
+                if (_model != null && _model.BoundsSize.X > 0) 
+                {
+                     _scale = size.X / _model.BoundsSize.X;
+                }
+            }
             public void SetTextureScale(float u, float v) { _model?.SetTextureScale(u, v); }
             public void SetPosition(Vector3 newPosition)
             {
@@ -194,8 +201,8 @@ namespace skystride.scenes
             var cube = entity as Cube;
             if (cube != null)
             {
-                float size = cube.GetSize();
-                Colliders.Add(new AABB(cube.GetPosition(), new Vector3(size, size, size)));
+                Vector3 size = cube.GetSize();
+                Colliders.Add(new AABB(cube.GetPosition(), size));
                 return;
             }
 
@@ -235,10 +242,9 @@ namespace skystride.scenes
             var checkboardTerrain = entity as CheckboardTerrain;
             if (checkboardTerrain != null)
             {
-                float halfSpan = checkboardTerrain.GetSize(); // tiles * tileSize (half span)
-                float fullSpan = halfSpan * 2f; // cover -tiles .. +tiles
+                Vector3 size = checkboardTerrain.GetSize();
                 const float groundThickness = 0.2f; // thin collision layer
-                Colliders.Add(new AABB(checkboardTerrain.GetPosition(), new Vector3(fullSpan, groundThickness, fullSpan)));
+                Colliders.Add(new AABB(checkboardTerrain.GetPosition(), new Vector3(size.X, groundThickness, size.Z)));
                 return;
             }
 

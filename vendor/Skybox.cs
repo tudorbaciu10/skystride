@@ -23,6 +23,8 @@ namespace skystride.objects
 
         public void SetPosition(Vector3 p) { _position = p; }
         public Vector3 GetPosition() { return _position; }
+        public Vector3 GetSize() { return new Vector3(_size); }
+        public void SetSize(Vector3 size) { _size = size.X; }
 
         private void LoadTexture(string relativePath)
         {

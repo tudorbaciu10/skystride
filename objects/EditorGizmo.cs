@@ -25,14 +25,22 @@ namespace skystride.objects
         Z
     }
 
+    public enum GizmoMode
+    {
+        Translate,
+        Scale
+    }
+
     public class EditorGizmo
     {
         private const float AxisLength = 2.0f;
         private const float AxisThickness = 0.1f;
         private const float ArrowHeadLen = 0.4f;
         private const float ArrowHeadRadius = 0.2f;
+        private const float ScaleBoxSize = 0.2f;
 
         public GizmoAxis SelectedAxis { get; private set; } = GizmoAxis.None;
+        public GizmoMode CurrentMode { get; set; } = GizmoMode.Translate;
 
         public void Render(Vector3 position)
         {
@@ -43,21 +51,21 @@ namespace skystride.objects
 
             // X Axis (Red)
             GL.Color3(SelectedAxis == GizmoAxis.X ? Color.Yellow : Color.Red);
-            RenderArrow(Vector3.UnitX, AxisLength);
+            RenderHandle(Vector3.UnitX, AxisLength);
 
             // Y Axis (Green)
             GL.Color3(SelectedAxis == GizmoAxis.Y ? Color.Yellow : Color.Lime);
-            RenderArrow(Vector3.UnitY, AxisLength);
+            RenderHandle(Vector3.UnitY, AxisLength);
 
             // Z Axis (Blue)
             GL.Color3(SelectedAxis == GizmoAxis.Z ? Color.Yellow : Color.Blue);
-            RenderArrow(Vector3.UnitZ, AxisLength);
+            RenderHandle(Vector3.UnitZ, AxisLength);
 
             GL.PopMatrix();
             GL.Enable(EnableCap.DepthTest);
         }
 
-        private void RenderArrow(Vector3 dir, float length)
+        private void RenderHandle(Vector3 dir, float length)
         {
             Vector3 end = dir * length;
             
@@ -69,11 +77,9 @@ namespace skystride.objects
             GL.End();
             GL.LineWidth(1f);
 
-            // Arrowhead (Cone approximation)
-            // We need to rotate the cone to match direction
             GL.PushMatrix();
             
-            // Calculate rotation to align +Y (default cone up) to 'dir'
+            // Calculate rotation to align +Y to 'dir'
             Vector3 up = Vector3.UnitY;
             if (dir != up)
             {
@@ -87,31 +93,80 @@ namespace skystride.objects
             }
             
             GL.Translate(0, length, 0);
-            
-            // Draw Cone
-            int segments = 16;
-            GL.Begin(PrimitiveType.TriangleFan);
-            GL.Vertex3(0, ArrowHeadLen, 0); // Tip
-            for (int i = 0; i <= segments; i++)
-            {
-                float theta = (float)(i * 2 * Math.PI / segments);
-                float x = ArrowHeadRadius * (float)Math.Cos(theta);
-                float z = ArrowHeadRadius * (float)Math.Sin(theta);
-                GL.Vertex3(x, 0, z);
-            }
-            GL.End();
 
-            // Cap
-            GL.Begin(PrimitiveType.TriangleFan);
-            GL.Vertex3(0, 0, 0);
-            for (int i = 0; i <= segments; i++)
+            if (CurrentMode == GizmoMode.Translate)
             {
-                float theta = (float)(i * 2 * Math.PI / segments);
-                float x = ArrowHeadRadius * (float)Math.Cos(theta);
-                float z = ArrowHeadRadius * (float)Math.Sin(theta);
-                GL.Vertex3(x, 0, z);
+                // Arrowhead (Cone)
+                int segments = 16;
+                GL.Begin(PrimitiveType.TriangleFan);
+                GL.Vertex3(0, ArrowHeadLen, 0); // Tip
+                for (int i = 0; i <= segments; i++)
+                {
+                    float theta = (float)(i * 2 * Math.PI / segments);
+                    float x = ArrowHeadRadius * (float)Math.Cos(theta);
+                    float z = ArrowHeadRadius * (float)Math.Sin(theta);
+                    GL.Vertex3(x, 0, z);
+                }
+                GL.End();
+
+                // Cap
+                GL.Begin(PrimitiveType.TriangleFan);
+                GL.Vertex3(0, 0, 0);
+                for (int i = 0; i <= segments; i++)
+                {
+                    float theta = (float)(i * 2 * Math.PI / segments);
+                    float x = ArrowHeadRadius * (float)Math.Cos(theta);
+                    float z = ArrowHeadRadius * (float)Math.Sin(theta);
+                    GL.Vertex3(x, 0, z);
+                }
+                GL.End();
             }
-            GL.End();
+            else if (CurrentMode == GizmoMode.Scale)
+            {
+                // Box
+                float s = ScaleBoxSize;
+                GL.Begin(PrimitiveType.Quads);
+                // Front
+                GL.Vertex3(-s, s, s); GL.Vertex3(s, s, s); GL.Vertex3(s, 0, s); GL.Vertex3(-s, 0, s);
+                // Back
+                GL.Vertex3(s, s, -s); GL.Vertex3(-s, s, -s); GL.Vertex3(-s, 0, -s); GL.Vertex3(s, 0, -s);
+                // Left
+                GL.Vertex3(-s, s, -s); GL.Vertex3(-s, s, s); GL.Vertex3(-s, 0, s); GL.Vertex3(-s, 0, -s);
+                // Right
+                GL.Vertex3(s, s, s); GL.Vertex3(s, s, -s); GL.Vertex3(s, 0, -s); GL.Vertex3(s, 0, s);
+                // Top
+                GL.Vertex3(-s, s + s, -s); GL.Vertex3(-s, s + s, s); GL.Vertex3(s, s + s, s); GL.Vertex3(s, s + s, -s); // Offset slightly up? No, just box at end
+                // Actually, let's just draw a cube centered at (0,0,0) relative to the end of the line
+                // But we translated to 'length' (end of line).
+                // Let's draw a cube from 0 to ScaleBoxSize*2 in Y? Or centered?
+                // Standard gizmo scale handles are cubes at the end.
+                // Let's center it at (0,0,0) (which is 'end' in world space)
+                
+                // Reset translation to draw centered box at tip
+                // Wait, we are at 'end'.
+            }
+            
+            if (CurrentMode == GizmoMode.Scale)
+            {
+                 // Draw Cube centered at 0,0,0 (which is the tip of the line)
+                 float s = ScaleBoxSize;
+                 GL.Begin(PrimitiveType.Quads);
+                 
+                 // Front
+                 GL.Vertex3(-s, -s, s); GL.Vertex3(s, -s, s); GL.Vertex3(s, s, s); GL.Vertex3(-s, s, s);
+                 // Back
+                 GL.Vertex3(-s, -s, -s); GL.Vertex3(-s, s, -s); GL.Vertex3(s, s, -s); GL.Vertex3(s, -s, -s);
+                 // Left
+                 GL.Vertex3(-s, -s, -s); GL.Vertex3(-s, -s, s); GL.Vertex3(-s, s, s); GL.Vertex3(-s, s, -s);
+                 // Right
+                 GL.Vertex3(s, -s, -s); GL.Vertex3(s, s, -s); GL.Vertex3(s, s, s); GL.Vertex3(s, -s, s);
+                 // Top
+                 GL.Vertex3(-s, s, -s); GL.Vertex3(-s, s, s); GL.Vertex3(s, s, s); GL.Vertex3(s, s, -s);
+                 // Bottom
+                 GL.Vertex3(-s, -s, -s); GL.Vertex3(s, -s, -s); GL.Vertex3(s, -s, s); GL.Vertex3(-s, -s, s);
+                 
+                 GL.End();
+            }
 
             GL.PopMatrix();
         }
@@ -124,7 +179,7 @@ namespace skystride.objects
             // Check intersection with each axis box
             // X Axis Box: (0, -w, -w) to (L, w, w)
             float w = AxisThickness * 2f; // Make it easier to click
-            float L = AxisLength + ArrowHeadLen;
+            float L = AxisLength + (CurrentMode == GizmoMode.Translate ? ArrowHeadLen : ScaleBoxSize);
 
             float tX = IntersectBox(localOrigin, ray.Direction, new Vector3(0, -w, -w), new Vector3(L, w, w));
             float tY = IntersectBox(localOrigin, ray.Direction, new Vector3(-w, 0, -w), new Vector3(w, L, w));

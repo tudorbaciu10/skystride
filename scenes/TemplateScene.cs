@@ -43,7 +43,7 @@ namespace skystride.scenes
 
         public void testAABB(Player _player, Cube _cube)
         {
-            AABB cubeAABB = new AABB(_cube.GetPosition(), new Vector3(_cube.GetSize(), _cube.GetSize(), _cube.GetSize()));
+            AABB cubeAABB = new AABB(_cube.GetPosition(), _cube.GetSize());
 
             bool isColliding = _player.Hitbox().Intersects(cubeAABB);
             Console.WriteLine("Collision Detected: " + isColliding);

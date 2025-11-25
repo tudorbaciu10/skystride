@@ -16,6 +16,7 @@ namespace skystride.objects.templates
         private int stacks; // latitudinal divisions
 
         public Vector3 GetPosition() { return this.position; }
+        public Vector3 GetSize() { return new Vector3(this.radius, this.height, this.radius); }
         public float GetRadius() { return this.radius; }
         public float GetHeight() { return this.height; }
         public Color GetColor() { return this.color; }
@@ -40,6 +41,11 @@ namespace skystride.objects.templates
         }
 
         public void SetPosition(Vector3 pos) { this.position = pos; }
+        public void SetSize(Vector3 size) 
+        { 
+            if (size.X > 0f) this.radius = size.X;
+            if (size.Y > 0f) this.height = size.Y;
+        }
         public void SetRadius(float r) { if (r > 0f) this.radius = r; }
         public void SetHeight(float h) { if (h > 0f) this.height = h; }
         public void SetColor(Color c) { this.color = c; }

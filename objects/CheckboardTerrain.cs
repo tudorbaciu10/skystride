@@ -24,10 +24,13 @@ namespace skystride.objects
             this.darkColor = Color.FromArgb(180, 180, 180);
         }
 
-        public float GetSize()
+        public Vector3 GetSize()
         {
-            return this.size * this.tiles;
+            float s = this.size * this.tiles * 2f;
+            return new Vector3(s, 0f, s);
         }
+
+        public void SetSize(Vector3 size) { }
 
         public Vector3 GetPosition()
         {

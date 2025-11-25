@@ -13,6 +13,8 @@ namespace skystride.objects.weapons
         public Vector3 Position { get; private set; }
         public Vector3 GetPosition() { return Position; }
         public void SetPosition(Vector3 pos) { Position = pos; }
+        public Vector3 GetSize() { return Vector3.Zero; }
+        public void SetSize(Vector3 size) { }
         public Vector3 Direction { get; private set; }
         public float Speed { get; private set; }
         public float Lifetime { get; private set; }

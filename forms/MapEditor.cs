@@ -81,7 +81,7 @@ namespace skystride.forms
         private float pitch = 0.0f;
         private const float mouseSensitivity = 0.2f; // similar to player
         private const float moveSpeed = 8.0f;
-        
+
         // UI Controls
         private ISceneEntity selectedEntity;
         private bool ignoreEvents = false;
@@ -333,6 +333,7 @@ namespace skystride.forms
         private bool isDraggingGizmo = false;
         private GizmoAxis dragAxis = GizmoAxis.None;
         private Vector3 dragStartPos;
+        private Vector3 dragStartSize;
         private Vector3 dragPlaneNormal;
         private Vector3 dragPlanePoint;
         private Vector3 dragStartHitPoint;
@@ -389,11 +390,11 @@ namespace skystride.forms
         private void GlControlMapEditor_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (!glControlMapEditor.Focused) glControlMapEditor.Focus();
-            
+
             if (e.Button == MouseButtons.Left)
             {
                 Ray ray = GetPickRay(e.X, e.Y);
-                
+
                 if (selectedEntity != null)
                 {
                     GizmoAxis hit = gizmo.CheckIntersection(ray, selectedEntity.GetPosition());
@@ -403,7 +404,8 @@ namespace skystride.forms
                         dragAxis = hit;
                         gizmo.SetSelectedAxis(hit);
                         dragStartPos = selectedEntity.GetPosition();
-                        
+                        dragStartSize = selectedEntity.GetSize();
+
                         // Determine drag plane
                         Vector3 viewDir = editorCamera.front;
                         dragPlanePoint = dragStartPos;
@@ -481,10 +483,10 @@ namespace skystride.forms
 
                 if (entity is Cube cube)
                 {
-                    float s = cube.GetSize();
+                    Vector3 s = cube.GetSize();
                     Vector3 pos = cube.GetPosition();
-                    Vector3 min = pos - new Vector3(s / 2f);
-                    Vector3 max = pos + new Vector3(s / 2f);
+                    Vector3 min = pos - s / 2f;
+                    Vector3 max = pos + s / 2f;
                     hit = RayIntersectsAABB(ray, min, max, out dist);
                 }
                 else if (entity is Sphere sphere)
@@ -496,12 +498,12 @@ namespace skystride.forms
                     // Treat plane as thin AABB
                     Vector3 size = plane.GetSize();
                     Vector3 pos = plane.GetPosition();
-                   
+
                     float sx = Math.Max(size.X, 0.1f);
                     float sy = Math.Max(size.Y, 0.1f); // planes usually flat on Y or Z depending on rotation, but size is dimensions
                     float sz = Math.Max(size.Z, 0.1f);
-                    
-                  
+
+
                     float maxDim = Math.Max(sx, Math.Max(sy, sz));
                     Vector3 min = pos - new Vector3(maxDim / 2f);
                     Vector3 max = pos + new Vector3(maxDim / 2f);
@@ -592,48 +594,7 @@ namespace skystride.forms
             }
         }
 
-        private void GlControlMapEditor_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            if (isDraggingGizmo && selectedEntity != null)
-            {
-                Ray ray = GetPickRay(e.X, e.Y);
-                var hitPoint = IntersectPlane(ray, dragPlaneNormal, dragPlanePoint);
-                if (hitPoint.HasValue)
-                {
-                    Vector3 currentHitPoint = hitPoint.Value;
-                    Vector3 delta = currentHitPoint - dragStartHitPoint;
-                    Vector3 newPos = dragStartPos;
 
-                    if (dragAxis == GizmoAxis.X) newPos.X += delta.X;
-                    if (dragAxis == GizmoAxis.Y) newPos.Y += delta.Y;
-                    if (dragAxis == GizmoAxis.Z) newPos.Z += delta.Z;
-
-                    selectedEntity.SetPosition(newPos);
-                    UpdatePositionControls();
-                }
-                return;
-            }
-
-            if (!isMouseLook)
-            {
-                // Hover effect
-                if (selectedEntity != null && !isDraggingGizmo)
-                {
-                    Ray ray = GetPickRay(e.X, e.Y);
-                    GizmoAxis hit = gizmo.CheckIntersection(ray, selectedEntity.GetPosition());
-                    gizmo.SetSelectedAxis(hit);
-                }
-                return;
-            }
-
-            var dx = e.X - lastMousePos.X;
-            var dy = e.Y - lastMousePos.Y;
-            lastMousePos = e.Location;
-
-            yaw += dx * mouseSensitivity;
-            pitch -= dy * mouseSensitivity;
-            pitch = MathHelper.Clamp(pitch, -89f, 89f);
-        }
 
         private void ExitMouseLook()
         {
@@ -698,6 +659,13 @@ namespace skystride.forms
             }
         }
 
+        private void RbMode_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbTranslate.Checked) gizmo.CurrentMode = GizmoMode.Translate;
+            else if (rbScale.Checked) gizmo.CurrentMode = GizmoMode.Scale;
+            glControlMapEditor.Invalidate();
+        }
+
         private void UpdatePositionControls()
         {
             if (selectedEntity == null) return;
@@ -706,6 +674,12 @@ namespace skystride.forms
             numPosX.Value = (decimal)pos.X;
             numPosY.Value = (decimal)pos.Y;
             numPosZ.Value = (decimal)pos.Z;
+
+            var size = selectedEntity.GetSize();
+            numSizeX.Value = (decimal)size.X;
+            numSizeY.Value = (decimal)size.Y;
+            numSizeZ.Value = (decimal)size.Z;
+
             ignoreEvents = false;
         }
 
@@ -714,6 +688,13 @@ namespace skystride.forms
             if (ignoreEvents || selectedEntity == null) return;
             var newPos = new Vector3((float)numPosX.Value, (float)numPosY.Value, (float)numPosZ.Value);
             selectedEntity.SetPosition(newPos);
+        }
+
+        private void NumSize_ValueChanged(object sender, EventArgs e)
+        {
+            if (ignoreEvents || selectedEntity == null) return;
+            var newSize = new Vector3((float)numSizeX.Value, (float)numSizeY.Value, (float)numSizeZ.Value);
+            selectedEntity.SetSize(newSize);
         }
 
         private void AddEntity(ISceneEntity entity)
@@ -734,6 +715,78 @@ namespace skystride.forms
                 selectedEntity = null;
                 RefreshEntityList();
             }
+        }
+
+        private void GlControlMapEditor_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (isDraggingGizmo && selectedEntity != null)
+            {
+                Ray ray = GetPickRay(e.X, e.Y);
+                var hitPoint = IntersectPlane(ray, dragPlaneNormal, dragPlanePoint);
+                if (hitPoint.HasValue)
+                {
+                    Vector3 currentHitPoint = hitPoint.Value;
+                    Vector3 delta = currentHitPoint - dragStartHitPoint;
+
+                    if (gizmo.CurrentMode == GizmoMode.Translate)
+                    {
+                        Vector3 newPos = dragStartPos;
+                        if (dragAxis == GizmoAxis.X) newPos.X += delta.X;
+                        if (dragAxis == GizmoAxis.Y) newPos.Y += delta.Y;
+                        if (dragAxis == GizmoAxis.Z) newPos.Z += delta.Z;
+                        selectedEntity.SetPosition(newPos);
+                    }
+                    else if (gizmo.CurrentMode == GizmoMode.Scale)
+                    {
+                        // Scale logic: dragging along axis increases/decreases size
+                        // We need original size to apply delta
+                        // But we only have dragStartPos (which is position). We need dragStartSize.
+                        // Let's store dragStartSize in MouseDown.
+
+                        // Simple scale: size += delta
+                        // But delta is in world units.
+
+                        Vector3 sizeDelta = Vector3.Zero;
+                        if (dragAxis == GizmoAxis.X) sizeDelta.X = delta.X;
+                        if (dragAxis == GizmoAxis.Y) sizeDelta.Y = delta.Y;
+                        if (dragAxis == GizmoAxis.Z) sizeDelta.Z = delta.Z;
+
+                        // Check direction of drag vs axis to ensure intuitive scaling (dragging right/up/forward increases)
+                        // This depends on where we are looking from, but usually +axis means +size.
+
+                        Vector3 newSize = dragStartSize + sizeDelta;
+                        // Clamp to minimal size
+                        if (newSize.X < 0.1f) newSize.X = 0.1f;
+                        if (newSize.Y < 0.1f) newSize.Y = 0.1f;
+                        if (newSize.Z < 0.1f) newSize.Z = 0.1f;
+
+                        selectedEntity.SetSize(newSize);
+                    }
+
+                    UpdatePositionControls();
+                }
+                return;
+            }
+
+            if (!isMouseLook)
+            {
+                // Hover effect
+                if (selectedEntity != null && !isDraggingGizmo)
+                {
+                    Ray ray = GetPickRay(e.X, e.Y);
+                    GizmoAxis hit = gizmo.CheckIntersection(ray, selectedEntity.GetPosition());
+                    gizmo.SetSelectedAxis(hit);
+                }
+                return;
+            }
+
+            var dx = e.X - lastMousePos.X;
+            var dy = e.Y - lastMousePos.Y;
+            lastMousePos = e.Location;
+
+            yaw += dx * mouseSensitivity;
+            pitch -= dy * mouseSensitivity;
+            pitch = MathHelper.Clamp(pitch, -89f, 89f);
         }
     }
 }

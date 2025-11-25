@@ -49,6 +49,10 @@ namespace skystride.objects.templates
         public Vector3 GetNormal() { return this.normal; }
 
         public void SetPosition(Vector3 pos) { this.position = pos; }
+        public void SetSize(Vector3 size)
+        {
+             SetSize(size.X, size.Z, size.Y);
+        }
         public void SetSize(float width, float depth)
         {
             if (width > 0f) this.width = width;
