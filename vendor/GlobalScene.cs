@@ -174,7 +174,9 @@ namespace skystride.scenes
             public string ModelPath { get { return _objectPath; } }
         }
 
-        protected void AddEntity(ISceneEntity entity, bool collidable = true)
+        public List<ISceneEntity> GetEntities() { return Entities; }
+
+        public void AddEntity(ISceneEntity entity, bool collidable = true)
         {
             if (entity == null) return;
             Entities.Add(entity);
@@ -204,10 +206,10 @@ namespace skystride.scenes
                 if (size != Vector3.Zero)
                 {
                     Vector3 rotDeg = plane.GetRotation();
-                    float effectiveHeight = size.Y <=0f ?0.05f : size.Y;
-                    float hx = size.X *0.5f;
-                    float hy = effectiveHeight *0.5f;
-                    float hz = size.Z *0.5f;
+                    float effectiveHeight = size.Y <= 0f ? 0.05f : size.Y;
+                    float hx = size.X * 0.5f;
+                    float hy = effectiveHeight * 0.5f;
+                    float hz = size.Z * 0.5f;
                     Vector3 colliderSize;
                     if (rotDeg != Vector3.Zero)
                     {
@@ -219,11 +221,11 @@ namespace skystride.scenes
                         float ex = Math.Abs(r0.X) * hx + Math.Abs(r0.Y) * hy + Math.Abs(r0.Z) * hz;
                         float ey = Math.Abs(r1.X) * hx + Math.Abs(r1.Y) * hy + Math.Abs(r1.Z) * hz;
                         float ez = Math.Abs(r2.X) * hx + Math.Abs(r2.Y) * hy + Math.Abs(r2.Z) * hz;
-                        colliderSize = new Vector3(ex *2f, ey *2f, ez *2f);
+                        colliderSize = new Vector3(ex * 2f, ey * 2f, ez * 2f);
                     }
                     else
                     {
-                        colliderSize = new Vector3(hx *2f, hy *2f, hz *2f);
+                        colliderSize = new Vector3(hx * 2f, hy * 2f, hz * 2f);
                     }
                     Colliders.Add(new AABB(plane.GetPosition(), colliderSize));
                 }
@@ -234,8 +236,8 @@ namespace skystride.scenes
             if (checkboardTerrain != null)
             {
                 float halfSpan = checkboardTerrain.GetSize(); // tiles * tileSize (half span)
-                float fullSpan = halfSpan *2f; // cover -tiles .. +tiles
-                const float groundThickness =0.2f; // thin collision layer
+                float fullSpan = halfSpan * 2f; // cover -tiles .. +tiles
+                const float groundThickness = 0.2f; // thin collision layer
                 Colliders.Add(new AABB(checkboardTerrain.GetPosition(), new Vector3(fullSpan, groundThickness, fullSpan)));
                 return;
             }
@@ -243,11 +245,22 @@ namespace skystride.scenes
             var sphere = entity as Sphere;
             if (sphere != null) {
                 float radius = sphere.GetRadius();
-                Colliders.Add(new AABB(sphere.GetPosition(), new Vector3(radius *2f, radius *2f, radius *2f)));
+                Colliders.Add(new AABB(sphere.GetPosition(), new Vector3(radius * 2f, radius * 2f, radius * 2f)));
                 return;
             }
+        }
 
-            // other entity types can be added here
+        public void RemoveEntity(ISceneEntity entity)
+        {
+            if (entity == null) return;
+            Entities.Remove(entity);
+            Colliders.Clear();
+            var currentEntities = new List<ISceneEntity>(Entities);
+            Entities.Clear();
+            foreach (var ent in currentEntities)
+            {
+                AddEntity(ent, true);
+            }
         }
 
         // Per-frame logic hook for scenes
@@ -256,7 +269,7 @@ namespace skystride.scenes
             // Update camera position reference for distance culling
             CurrentCameraPos = camera != null ? camera.position : Vector3.Zero;
 
-            for (int i =0; i < Entities.Count; i++)
+            for (int i = 0; i < Entities.Count; i++)
             {
                 var me = Entities[i] as ModelEntity;
                 if (me != null)

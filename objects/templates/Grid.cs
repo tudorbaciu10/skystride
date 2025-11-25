@@ -23,6 +23,9 @@ namespace skystride.objects.templates
             this.color = Color.WhiteSmoke;
         }
 
+        public Vector3 GetPosition() { return Vector3.Zero; }
+        public void SetPosition(Vector3 pos) { }
+
         public void Render()
         {
             GL.Color3(this.color);

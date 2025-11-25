@@ -10,7 +10,7 @@ namespace skystride.objects
     {
         private readonly int tiles;
         private readonly float size;
-        private readonly float coord_y;
+        private Vector3 position;
 
         private readonly Color lightColor;
         private readonly Color darkColor;
@@ -19,7 +19,7 @@ namespace skystride.objects
         {
             this.tiles = Math.Max(1, _tiles);
             this.size = Math.Max(0.001f, _tiles_size);
-            this.coord_y = _coord_y;
+            this.position = new Vector3(0, _coord_y, 0);
             this.lightColor = Color.FromArgb(215, 215, 215);
             this.darkColor = Color.FromArgb(180, 180, 180);
         }
@@ -31,12 +31,21 @@ namespace skystride.objects
 
         public Vector3 GetPosition()
         {
-            return new Vector3(0, this.coord_y, 0);
+            return this.position;
+        }
+
+        public void SetPosition(Vector3 pos)
+        {
+            this.position = pos;
         }
 
         public void Render()
         {
             GL.Begin(PrimitiveType.Quads);
+
+            float px = position.X;
+            float py = position.Y;
+            float pz = position.Z;
 
             for (int x = -this.tiles; x < this.tiles; x++)
             {
@@ -46,15 +55,15 @@ namespace skystride.objects
                     var c = isLight ? lightColor : darkColor;
                     GL.Color3(c);
 
-                    float x0 = x * this.size;
-                    float x1 = (x + 1) * this.size;
-                    float z0 = z * this.size;
-                    float z1 = (z + 1) * this.size;
+                    float x0 = px + x * this.size;
+                    float x1 = px + (x + 1) * this.size;
+                    float z0 = pz + z * this.size;
+                    float z1 = pz + (z + 1) * this.size;
 
-                    GL.Vertex3(x0, this.coord_y, z0);
-                    GL.Vertex3(x1, this.coord_y, z0);
-                    GL.Vertex3(x1, this.coord_y, z1);
-                    GL.Vertex3(x0, this.coord_y, z1);
+                    GL.Vertex3(x0, py, z0);
+                    GL.Vertex3(x1, py, z0);
+                    GL.Vertex3(x1, py, z1);
+                    GL.Vertex3(x0, py, z1);
                 }
             }
 

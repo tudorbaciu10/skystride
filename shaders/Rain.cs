@@ -53,6 +53,9 @@ namespace skystride.shaders
             }
         }
 
+        public Vector3 GetPosition() { return Vector3.Zero; }
+        public void SetPosition(Vector3 pos) { }
+
         public Rain(int count = 2000, float areaSize = 100f, float spawnHeight = 40f, float groundY = -10f,
         float minSpeed = 10.0f, float maxSpeed = 22.0f, float minSize = 1.0f, float maxSize = 2.5f, float sizeScale = 1.2f, float obliqueAngle = 15f)
         {

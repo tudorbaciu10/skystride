@@ -96,6 +96,15 @@ namespace skystride.forms
         private float pitch = 0.0f;
         private const float mouseSensitivity = 0.2f; // similar to player
         private const float moveSpeed = 8.0f;
+        
+        // UI Controls
+        private Panel uiPanel;
+        private ListBox lstEntities;
+        private NumericUpDown numPosX, numPosY, numPosZ;
+        private Button btnAddCube, btnAddSphere, btnAddPlane, btnDelete;
+        private Label lblPos;
+        private ISceneEntity selectedEntity;
+        private bool ignoreEvents = false;
 
         public MapEditor()
         {
@@ -163,6 +172,8 @@ namespace skystride.forms
                 glControlMapEditor.Invalidate();
             };
             renderTimer.Start();
+            renderTimer.Start();
+            InitializeEditorUI();
         }
 
         private void GlControlMapEditor_Disposed(object sender, EventArgs e)
@@ -376,6 +387,143 @@ namespace skystride.forms
 
             activeScene?.Dispose();
             activeScene = newScene;
+            RefreshEntityList();
+        }
+        private void InitializeEditorUI()
+        {
+            glControlMapEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
+            uiPanel = new Panel();
+            uiPanel.Parent = this;
+            uiPanel.Location = new Point(glControlMapEditor.Width + 10, 10);
+            uiPanel.Size = new Size(this.ClientSize.Width - glControlMapEditor.Width - 20, this.ClientSize.Height - 20);
+            uiPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+
+            int y = 0;
+
+            // ListBox
+            lstEntities = new ListBox();
+            lstEntities.Parent = uiPanel;
+            lstEntities.Location = new Point(0, y);
+            lstEntities.Size = new Size(uiPanel.Width, 200);
+            lstEntities.SelectedIndexChanged += LstEntities_SelectedIndexChanged;
+            y += 210;
+
+            // Position Controls
+            lblPos = new Label();
+            lblPos.Parent = uiPanel;
+            lblPos.Text = "Position (X, Y, Z):";
+            lblPos.Location = new Point(0, y);
+            lblPos.AutoSize = true;
+            y += 25;
+
+            numPosX = CreateNumeric(uiPanel, 0, y);
+            numPosY = CreateNumeric(uiPanel, 70, y);
+            numPosZ = CreateNumeric(uiPanel, 140, y);
+            y += 30;
+
+            // Add Buttons
+            btnAddCube = CreateButton(uiPanel, "Add Cube", 0, y, (s, e) => AddEntity(new Cube()));
+            y += 30;
+            btnAddSphere = CreateButton(uiPanel, "Add Sphere", 0, y, (s, e) => AddEntity(new Sphere()));
+            y += 30;
+            btnAddPlane = CreateButton(uiPanel, "Add Plane", 0, y, (s, e) => AddEntity(new Plane()));
+            y += 30;
+            btnDelete = CreateButton(uiPanel, "Delete Selected", 0, y, BtnDelete_Click);
+
+            RefreshEntityList();
+        }
+
+        private NumericUpDown CreateNumeric(Control parent, int x, int y)
+        {
+            var num = new NumericUpDown();
+            num.Parent = parent;
+            num.Location = new Point(x, y);
+            num.Width = 60;
+            num.DecimalPlaces = 2;
+            num.Minimum = -10000;
+            num.Maximum = 10000;
+            num.ValueChanged += NumPos_ValueChanged;
+            return num;
+        }
+
+        private Button CreateButton(Control parent, string text, int x, int y, EventHandler onClick)
+        {
+            var btn = new Button();
+            btn.Parent = parent;
+            btn.Text = text;
+            btn.Location = new Point(x, y);
+            btn.Width = parent.Width;
+            btn.Click += onClick;
+            return btn;
+        }
+
+        private void RefreshEntityList()
+        {
+            lstEntities.Items.Clear();
+            if (activeScene != null)
+            {
+                var entities = activeScene.GetEntities();
+                for (int i = 0; i < entities.Count; i++)
+                {
+                    lstEntities.Items.Add($"{i}: {entities[i].GetType().Name}");
+                }
+            }
+        }
+
+        private void LstEntities_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (lstEntities.SelectedIndex >= 0 && activeScene != null)
+            {
+                var entities = activeScene.GetEntities();
+                if (lstEntities.SelectedIndex < entities.Count)
+                {
+                    selectedEntity = entities[lstEntities.SelectedIndex];
+                    UpdatePositionControls();
+                }
+            }
+            else
+            {
+                selectedEntity = null;
+            }
+        }
+
+        private void UpdatePositionControls()
+        {
+            if (selectedEntity == null) return;
+            ignoreEvents = true;
+            var pos = selectedEntity.GetPosition();
+            numPosX.Value = (decimal)pos.X;
+            numPosY.Value = (decimal)pos.Y;
+            numPosZ.Value = (decimal)pos.Z;
+            ignoreEvents = false;
+        }
+
+        private void NumPos_ValueChanged(object sender, EventArgs e)
+        {
+            if (ignoreEvents || selectedEntity == null) return;
+            var newPos = new Vector3((float)numPosX.Value, (float)numPosY.Value, (float)numPosZ.Value);
+            selectedEntity.SetPosition(newPos);
+        }
+
+        private void AddEntity(ISceneEntity entity)
+        {
+            if (activeScene != null)
+            {
+                activeScene.AddEntity(entity);
+                RefreshEntityList();
+                lstEntities.SelectedIndex = lstEntities.Items.Count - 1;
+            }
+        }
+
+        private void BtnDelete_Click(object sender, EventArgs e)
+        {
+            if (selectedEntity != null && activeScene != null)
+            {
+                activeScene.RemoveEntity(selectedEntity);
+                selectedEntity = null;
+                RefreshEntityList();
+            }
         }
     }
 }
