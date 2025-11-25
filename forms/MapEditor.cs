@@ -83,11 +83,6 @@ namespace skystride.forms
         private const float moveSpeed = 8.0f;
         
         // UI Controls
-        private Panel uiPanel;
-        private ListBox lstEntities;
-        private NumericUpDown numPosX, numPosY, numPosZ;
-        private Button btnAddCube, btnAddSphere, btnAddPlane, btnDelete;
-        private Label lblPos;
         private ISceneEntity selectedEntity;
         private bool ignoreEvents = false;
 
@@ -157,8 +152,8 @@ namespace skystride.forms
                 glControlMapEditor.Invalidate();
             };
             renderTimer.Start();
-            renderTimer.Start();
-            InitializeEditorUI();
+            RefreshEntityList();
+
         }
 
         internal static void UpdateScene(string mapName)
@@ -342,49 +337,19 @@ namespace skystride.forms
         private Vector3 dragPlanePoint;
         private Vector3 dragStartHitPoint;
 
-        private void InitializeEditorUI()
+        private void BtnAddCube_Click(object sender, EventArgs e)
         {
-            glControlMapEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            AddEntity(new Cube());
+        }
 
-            uiPanel = new Panel();
-            uiPanel.Parent = this;
-            uiPanel.Location = new Point(glControlMapEditor.Width + 10, 10);
-            uiPanel.Size = new Size(this.ClientSize.Width - glControlMapEditor.Width - 20, this.ClientSize.Height - 20);
-            uiPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+        private void BtnAddSphere_Click(object sender, EventArgs e)
+        {
+            AddEntity(new Sphere());
+        }
 
-            int y = 0;
-
-            // ListBox
-            lstEntities = new ListBox();
-            lstEntities.Parent = uiPanel;
-            lstEntities.Location = new Point(0, y);
-            lstEntities.Size = new Size(uiPanel.Width, 200);
-            lstEntities.SelectedIndexChanged += LstEntities_SelectedIndexChanged;
-            y += 210;
-
-            // Position Controls
-            lblPos = new Label();
-            lblPos.Parent = uiPanel;
-            lblPos.Text = "Position (X, Y, Z):";
-            lblPos.Location = new Point(0, y);
-            lblPos.AutoSize = true;
-            y += 25;
-
-            numPosX = CreateNumeric(uiPanel, 0, y);
-            numPosY = CreateNumeric(uiPanel, 70, y);
-            numPosZ = CreateNumeric(uiPanel, 140, y);
-            y += 30;
-
-            // Add Buttons
-            btnAddCube = CreateButton(uiPanel, "Add Cube", 0, y, (s, e) => AddEntity(new Cube()));
-            y += 30;
-            btnAddSphere = CreateButton(uiPanel, "Add Sphere", 0, y, (s, e) => AddEntity(new Sphere()));
-            y += 30;
-            btnAddPlane = CreateButton(uiPanel, "Add Plane", 0, y, (s, e) => AddEntity(new Plane()));
-            y += 30;
-            btnDelete = CreateButton(uiPanel, "Delete Selected", 0, y, BtnDelete_Click);
-
-            RefreshEntityList();
+        private void BtnAddPlane_Click(object sender, EventArgs e)
+        {
+            AddEntity(new Plane());
         }
 
         private Ray GetPickRay(int mouseX, int mouseY)
@@ -702,29 +667,6 @@ namespace skystride.forms
         }
 
 
-        private NumericUpDown CreateNumeric(Control parent, int x, int y)
-        {
-            var num = new NumericUpDown();
-            num.Parent = parent;
-            num.Location = new Point(x, y);
-            num.Width = 60;
-            num.DecimalPlaces = 2;
-            num.Minimum = -10000;
-            num.Maximum = 10000;
-            num.ValueChanged += NumPos_ValueChanged;
-            return num;
-        }
-
-        private Button CreateButton(Control parent, string text, int x, int y, EventHandler onClick)
-        {
-            var btn = new Button();
-            btn.Parent = parent;
-            btn.Text = text;
-            btn.Location = new Point(x, y);
-            btn.Width = parent.Width;
-            btn.Click += onClick;
-            return btn;
-        }
 
         private void RefreshEntityList()
         {
