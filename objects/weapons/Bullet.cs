@@ -22,6 +22,8 @@ namespace skystride.objects.weapons
 
         private float _timeAlive;
 
+        public float Damage { get; private set; } = 25f;
+
         public Bullet(Vector3 position, Vector3 direction, float speed, float lifetime)
         {
             Position = position;
@@ -53,6 +55,12 @@ namespace skystride.objects.weapons
                 {
                     if (RayIntersectsAABB(Position, Direction, box, distance))
                     {
+                        // Check if we hit an NPC
+                        if (box.Owner is skystride.vendor.NPC npc)
+                        {
+                            npc.TakeDamage(Damage);
+                        }
+
                         IsDead = true;
                         return;
                     }

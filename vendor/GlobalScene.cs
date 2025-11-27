@@ -170,6 +170,17 @@ namespace skystride.scenes
                 }
             }
 
+            // Remove dead NPCs
+            // Iterate backwards to safely remove
+            for (int i = Entities.Count - 1; i >= 0; i--)
+            {
+                var npc = Entities[i] as NPC;
+                if (npc != null && npc.IsDead())
+                {
+                    RemoveEntity(npc);
+                }
+            }
+
             // Handle shooting only when input is enabled (window focused & console closed)
             if (player != null)
             {

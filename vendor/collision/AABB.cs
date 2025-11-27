@@ -4,18 +4,18 @@ namespace skystride.vendor.collision
 {
     internal class AABB
     {
-        private Vector3 position;
-        private Vector3 size;
+        public Vector3 Position { get; set; }
+        public Vector3 Size { get; set; }
 
-        public Vector3 Min => this.position - (this.size / 2f);
-        public Vector3 Max => this.position + (this.size / 2f);
+        public Vector3 Min => this.Position - (this.Size / 2f);
+        public Vector3 Max => this.Position + (this.Size / 2f);
 
         public object Owner { get; set; }
 
         public AABB(Vector3 position, Vector3 size, object owner = null)
         {
-            this.position = position;
-            this.size = size;
+            this.Position = position;
+            this.Size = size;
             this.Owner = owner;
         }
 

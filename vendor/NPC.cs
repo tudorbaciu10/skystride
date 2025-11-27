@@ -48,6 +48,9 @@ namespace skystride.vendor
         private float moveSpeed;
         private float health;
         
+        // Collision
+        private AABB collider;
+        
         // AI state
         private float wanderTimer;
         private float wanderInterval;
@@ -87,6 +90,9 @@ namespace skystride.vendor
             
             // Initialize damage timer
             this.damageTimer = 0f;
+            
+            // Create collider
+            this.collider = new AABB(position, new Vector3(radius * 2f), this);
             
             // Create white sphere for visual representation
             this.visualSphere = new Sphere(position, radius, Color.White, 16, 12);
@@ -140,18 +146,14 @@ namespace skystride.vendor
                 this.damagePerHit = damage;
             }
         }
-
         /// <summary>
         /// Get the collision box for this NPC
         /// </summary>
         public AABB GetCollider()
         {
-            return new AABB(position, new Vector3(radius * 2f, radius * 2f, radius * 2f), this);
+            return collider;
         }
 
-        /// <summary>
-        /// Update NPC AI and physics
-        /// </summary>
         public void Update(float dt, Player player = null)
         {
             if (dt <= 0f) return;
@@ -387,6 +389,13 @@ namespace skystride.vendor
             }
 
             position = p;
+            
+            // Update collider position
+            if (collider != null)
+            {
+                collider.Position = position;
+            }
+            
             if (visualSphere != null)
             {
                 visualSphere.SetPosition(position);

@@ -10,7 +10,7 @@ namespace skystride.objects.weapons.shotguns
 {
     internal class Shotgun : Weapon
     {
-        public Shotgun() : base("Shotgun", 8, 80)
+        public Shotgun() : base("Shotgun", 18, 80)
         {
             this.ModelPath = "assets/models/weapons/shotgun.obj";
             this.TexturePath = "assets/models/weapons/shotgun.jpg";
