@@ -21,7 +21,7 @@ namespace skystride.scenes
             AddEntity(new Grid());
             AddEntity(new CheckboardTerrain());
 
-            _sky = new Skybox("assets/textures/skybox_forest.jpg", 400f);
+            _sky = new Skybox("assets/textures/skybox/skybox_forest.jpg", 400f);
             _sky.SetPosition(new Vector3(0f, 20f, 0f));
 
             // Immediate near models (legacy constructor)

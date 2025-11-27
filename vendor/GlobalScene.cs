@@ -43,162 +43,7 @@ namespace skystride.scenes
             }
         }
 
-        protected class ModelEntity : ISceneEntity, IDisposable
-        {
-            private string _objectPath;
-            private string _texturePath;
-            private Vector3 _position; // removed readonly
-            private float _scale;
-            private float _rx, _ry, _rz;
-            private float _texScaleU, _texScaleV;
-            private float _loadDistance; // threshold to load resources
-            private float _unloadDistance; // threshold to unload resources
-            private float _loadDistanceSq;
-            private float _unloadDistanceSq;
-            private Model _model; // null until loaded
-            private bool _isLoaded;
-            private AABB _dynamicCollider; // created when loaded, removed when unloaded
-            private List<AABB> _collidersRef; // reference to scene collider list (set via ctor or Attach)
 
-            // Constructor using paths (lazy default)
-            public ModelEntity(string objectPath, string texturePath, Vector3 position, float scale,
-            float rx, float ry, float rz, float texScaleU =1f, float texScaleV =1f,
-            float? loadDistance = null, float? unloadDistance = null, List<AABB> collidersRef = null)
-            {
-                _objectPath = objectPath;
-                _texturePath = texturePath;
-                _position = position;
-                _scale = scale;
-                _rx = rx; _ry = ry; _rz = rz;
-                _texScaleU = texScaleU; _texScaleV = texScaleV;
-                _collidersRef = collidersRef; // may be null if caller omitted
-
-                float ld = loadDistance ?? (GlobalScene.DrawDistance *0.9f);
-                float ud = unloadDistance ?? (GlobalScene.DrawDistance *1.15f);
-                if (ud <= ld) ud = ld +25f; // ensure hysteresis
-                _loadDistance = ld;
-                _unloadDistance = ud;
-                _loadDistanceSq = _loadDistance * _loadDistance;
-                _unloadDistanceSq = _unloadDistance * _unloadDistance;
-            }
-
-            // Legacy constructor kept (immediate model provided)
-            public ModelEntity(Model model, Vector3 position, float scale, float rx, float ry, float rz, float texScaleU =1f, float texScaleV =1f)
-            {
-                _model = model;
-                _objectPath = null;
-                _texturePath = null;
-                _position = position;
-                _scale = scale;
-                _rx = rx; _ry = ry; _rz = rz;
-                _texScaleU = texScaleU; _texScaleV = texScaleV;
-                _isLoaded = model != null && model.Loaded;
-                _loadDistance = GlobalScene.DrawDistance *0.9f;
-                _unloadDistance = GlobalScene.DrawDistance *1.15f;
-                _loadDistanceSq = _loadDistance * _loadDistance;
-                _unloadDistanceSq = _unloadDistance * _unloadDistance;
-            }
-
-            // Allow wiring the colliders list after construction (e.g., from AddEntity)
-            internal void AttachCollidersRef(List<AABB> collidersRef)
-            {
-                if (collidersRef == null) return;
-                if (_collidersRef != null) return; // already attached via ctor
-                _collidersRef = collidersRef;
-
-                // If already loaded (legacy ctor), create and register collider immediately
-                if (_isLoaded && _dynamicCollider == null)
-                {
-                    var size = GetSize();
-                    if (size != Vector3.Zero)
-                    {
-                        _dynamicCollider = new AABB(_position, size, this);
-                        _collidersRef.Add(_dynamicCollider);
-                    }
-                }
-            }
-
-            public void Evaluate(Vector3 cameraPos)
-            {
-                float distSq = Vector3.DistanceSquared(cameraPos, _position);
-
-                if (!_isLoaded && distSq <= _loadDistanceSq)
-                {
-                    if (_objectPath != null)
-                    {
-                        try
-                        {
-                            _model = new Model(_objectPath, _texturePath);
-                            _model.SetTextureScale(_texScaleU, _texScaleV);
-                            _isLoaded = _model.Loaded;
-                            if (_isLoaded && _collidersRef != null)
-                            {
-                                var size = GetSize();
-                                if (size != Vector3.Zero)
-                                {
-                                    _dynamicCollider = new AABB(_position, size, this);
-                                    _collidersRef.Add(_dynamicCollider);
-                                }
-                            }
-                        }
-                        catch { _isLoaded = false; }
-                    }
-                }
-                else if (_isLoaded && distSq > _unloadDistanceSq)
-                {
-                    // Unload resources
-                    try { _model?.Dispose(); } catch { }
-                    _model = null;
-                    _isLoaded = false;
-                    if (_dynamicCollider != null && _collidersRef != null)
-                    {
-                        _collidersRef.Remove(_dynamicCollider);
-                        _dynamicCollider = null;
-                    }
-                }
-            }
-
-            public void Render()
-            {
-                // Frustum/draw distance culling first
-                if (Vector3.DistanceSquared(_position, GlobalScene.CurrentCameraPos) > GlobalScene.DrawDistanceSquared)
-                    return;
-                if (_model != null && _model.Loaded)
-                    _model.Render(_position, _scale, _rx, _ry, _rz);
-            }
-
-            public Vector3 GetPosition() { return _position; }
-            public Vector3 GetSize() { return _model != null ? _model.BoundsSize * _scale : Vector3.Zero; }
-            public void SetSize(Vector3 size) 
-            { 
-                if (_model != null && _model.BoundsSize.X > 0) 
-                {
-                     _scale = size.X / _model.BoundsSize.X;
-                }
-            }
-            public void SetTextureScale(float u, float v) { _model?.SetTextureScale(u, v); }
-            public void SetPosition(Vector3 newPosition)
-            {
-                _position = newPosition;
-                if (_dynamicCollider != null && _collidersRef != null)
-                {
-                    _collidersRef.Remove(_dynamicCollider);
-                    _dynamicCollider = new AABB(_position, GetSize(), this);
-                    _collidersRef.Add(_dynamicCollider);
-                }
-            }
-            public void Dispose()
-            {
-                try { _model?.Dispose(); } catch { }
-                if (_dynamicCollider != null && _collidersRef != null)
-                {
-                    _collidersRef.Remove(_dynamicCollider);
-                    _dynamicCollider = null;
-                }
-            }
-
-            public string ModelPath { get { return _objectPath; } }
-        }
 
         public List<ISceneEntity> GetEntities() { return Entities; }
 
@@ -206,6 +51,12 @@ namespace skystride.scenes
         {
             if (entity == null) return;
             Entities.Add(entity);
+
+            var item = entity as Item;
+            if (item != null)
+            {
+                AttachTrigger(item, (p) => item.OnPickup(p), triggerOnce: true);
+            }
 
             if (!collidable) return;
 
@@ -299,6 +150,10 @@ namespace skystride.scenes
                 var me = Entities[i] as ModelEntity;
                 if (me != null)
                     me.Evaluate(CurrentCameraPos);
+
+                var item = Entities[i] as Item;
+                if (item != null)
+                    item.Update(dt);
             }
 
             // Handle shooting only when input is enabled (window focused & console closed)

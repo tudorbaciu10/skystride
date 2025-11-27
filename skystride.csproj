@@ -65,6 +65,10 @@
     <Compile Include="shaders\Lighting.cs" />
     <Compile Include="shaders\Rain.cs" />
     <Compile Include="vendor\GameConsole.cs" />
+    <Compile Include="objects\Item.cs" />
+    <Compile Include="objects\items\WeaponItem.cs" />
+    <Compile Include="vendor\Inventory.cs" />
+    <Compile Include="vendor\ModelEntity.cs" />
     <Compile Include="vendor\Player.cs" />
     <Compile Include="vendor\Skybox.cs" />
     <Compile Include="objects\templates\Cube.cs" />

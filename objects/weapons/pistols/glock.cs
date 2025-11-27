@@ -12,7 +12,9 @@ namespace skystride.objects.weapons.pistols
     {
         public Glock() : base("Glock", 17, 25)
         {
-            this.model = new Model("assets/models/weapons/glock.obj", "assets/models/weapons/glock.jpg");
+            this.ModelPath = "assets/models/weapons/glock.obj";
+            this.TexturePath = "assets/models/weapons/glock.jpg";
+            this.model = new Model(this.ModelPath, this.TexturePath);
             this.model.SetTextureScale(1f,1f);
             
             this.viewOffset = new Vector3(0.9f, -0.7f, -1.8f);

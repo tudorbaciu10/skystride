@@ -10,6 +10,10 @@ namespace skystride.objects.weapons
         protected string name;
         protected Model model;
 
+        public string ModelPath { get; protected set; }
+        public string TexturePath { get; protected set; }
+        public float Scale { get { return scale; } }
+
         protected Vector3 viewOffset = new Vector3(0.6f, -0.6f, -1.6f);
         protected Vector3 rotation = Vector3.Zero;
         protected float scale = 0.25f;

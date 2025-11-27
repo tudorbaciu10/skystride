@@ -64,6 +64,7 @@ namespace skystride.vendor
 
         // attached first-person weapon
         private skystride.objects.weapons.Weapon attachedWeapon;
+        private Inventory inventory;
 
         public bool doubleJumpEnabled = true;
         private bool hasDoubleJumped = false; // tracks if double jump was used since last time grounded
@@ -73,6 +74,7 @@ namespace skystride.vendor
             this.health = 100;
             this.position = new Vector3(0, 5, 3);
             this.previousPosition = this.position;
+            this.inventory = new Inventory();
             UpdateVectors();
         }
 
@@ -98,7 +100,15 @@ namespace skystride.vendor
 
         public void AttachWeapon(skystride.objects.weapons.Weapon _weapon)
         {
+            if (_weapon == null) return;
+            inventory.AddWeapon(_weapon);
             attachedWeapon = _weapon;
+        }
+
+        public void SwitchWeapon(int index)
+        {
+            inventory.SwitchWeapon(index);
+            attachedWeapon = inventory.GetCurrentWeapon();
         }
 
         public bool HasAttachedWeapon()
@@ -147,6 +157,13 @@ namespace skystride.vendor
         public void Update(KeyboardState current, KeyboardState previous, float dt)
         {
             if (dt <= 0f) return;
+
+            // Weapon switching
+            if (current.IsKeyDown(Key.Number1)) SwitchWeapon(0);
+            if (current.IsKeyDown(Key.Number2)) SwitchWeapon(1);
+            if (current.IsKeyDown(Key.Number3)) SwitchWeapon(2);
+            if (current.IsKeyDown(Key.Number4)) SwitchWeapon(3);
+            if (current.IsKeyDown(Key.Number5)) SwitchWeapon(4);
 
             // store previous position for collision rollback/resolution
             this.previousPosition = this.position;
@@ -321,6 +338,7 @@ namespace skystride.vendor
             foreach (var c in colliders)
             {
                 if (c == null) continue;
+                if (c.Owner is skystride.objects.Item) continue;
 
                 // compute current camera box and collider box using local p
                 Vector3 camMin = new Vector3(p.X - halfX, p.Y - halfY, p.Z - halfZ);
