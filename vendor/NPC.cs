@@ -7,61 +7,38 @@ using System.Drawing;
 using OpenTK.Graphics.OpenGL;
 
 namespace skystride.vendor
-{
-    /// <summary>
-    /// Non-Player Character with basic AI intelligence
-    /// </summary>
+
     internal class NPC : ISceneEntity
-    {
-        /// <summary>
-        /// Defines the behavior type of an NPC
-        /// </summary>
+    
         public enum NPCType
-        {
-            /// <summary>
-            /// NPC will not attack, only wander
-            /// </summary>
+        
             Passive,
-
-            /// <summary>
-            /// NPC will attack when provoked or damaged
-            /// </summary>
             Defensive,
-
-            /// <summary>
-            /// NPC will attack players on sight
-            /// </summary>
             Aggressive
         }
-        // Visual representation
+
         private Sphere visualSphere;
         
-        // Transform
         private Vector3 position;
         private Vector3 velocity;
         private Vector3 direction;
         
-        // NPC properties
         private NPCType npcType;
         private string name;
         private float radius;
         private float moveSpeed;
         private float health;
         
-        // Collision
         private AABB collider;
         
-        // AI state
         private float wanderTimer;
         private float wanderInterval;
         private Random random;
         
-        // Damage system
         private float damageTimer;
         private float damageCooldown = 1.0f; // 1 second between damage ticks
         private int damagePerHit = 10; // damage dealt per hit
         
-        // Physics
         private float gravity = -18.0f;
         private float groundY = -10.0f;
         private float eyeHeight = 0.5f;
@@ -70,14 +47,6 @@ namespace skystride.vendor
         public NPCType Type { get { return npcType; } }
         public float Health { get { return health; } }
 
-        /// <summary>
-        /// Create a new NPC
-        /// </summary>
-        /// <param name="position">Starting position</param>
-        /// <param name="type">Behavior type</param>
-        /// <param name="radius">Visual radius (default 0.5f)</param>
-        /// <param name="damage">Damage per hit (default 10)</param>
-        /// <param name="name">NPC name (default "NPC")</param>
         public NPC(Vector3 position, string name = "NPC", NPCType type = NPCType.Passive, float radius = 0.5f, int damage = 10)
         {
             this.position = position;
@@ -88,16 +57,12 @@ namespace skystride.vendor
             this.health = 100f;
             this.damagePerHit = damage;
             
-            // Initialize damage timer
             this.damageTimer = 0f;
             
-            // Create collider
             this.collider = new AABB(position, new Vector3(radius * 2f), this);
             
-            // Create white sphere for visual representation
             this.visualSphere = new Sphere(position, radius, Color.White, 16, 12);
             
-            // Initialize AI
             this.random = new Random(Guid.NewGuid().GetHashCode());
             this.wanderInterval = 2.0f + (float)random.NextDouble() * 2.0f; // 2-4 seconds
             this.wanderTimer = 0f;
@@ -136,9 +101,6 @@ namespace skystride.vendor
             }
         }
 
-        /// <summary>
-        /// Set the damage per hit for this NPC
-        /// </summary>
         public void SetDamage(int damage)
         {
             if (damage >= 0)
@@ -146,9 +108,7 @@ namespace skystride.vendor
                 this.damagePerHit = damage;
             }
         }
-        /// <summary>
-        /// Get the collision box for this NPC
-        /// </summary>
+
         public AABB GetCollider()
         {
             return collider;
@@ -158,7 +118,6 @@ namespace skystride.vendor
         {
             if (dt <= 0f) return;
 
-            // Aggressive NPCs chase the player
             if (npcType == NPCType.Aggressive && player != null)
             {
                 Vector3 playerPos = player.position;
@@ -173,18 +132,15 @@ namespace skystride.vendor
             }
             else
             {
-                // Passive and Defensive NPCs wander randomly
                 wanderTimer += dt;
                 if (wanderTimer >= wanderInterval)
                 {
-                    // Change direction
                     direction = GetRandomDirection();
                     wanderTimer = 0f;
                     wanderInterval = 2.0f + (float)random.NextDouble() * 2.0f;
                 }
             }
 
-            // Apply movement in current direction
             Vector3 wishDir = direction;
             wishDir.Y = 0f; // keep movement horizontal
             if (wishDir.LengthSquared > 0f)
@@ -192,20 +148,16 @@ namespace skystride.vendor
                 wishDir.NormalizeFast();
             }
 
-            // Simple velocity update (no advanced physics like player)
             if (isGrounded)
             {
                 velocity.X = wishDir.X * moveSpeed;
                 velocity.Z = wishDir.Z * moveSpeed;
             }
 
-            // Apply gravity
             velocity.Y += gravity * dt;
 
-            // Update position
             position += velocity * dt;
 
-            // Ground collision (simple plane check)
             float minY = groundY + eyeHeight;
             if (position.Y <= minY)
             {
@@ -221,7 +173,6 @@ namespace skystride.vendor
                 isGrounded = false;
             }
 
-            // Check for player collision and deal damage
             if (player != null && npcType == NPCType.Aggressive)
             {
                 AABB playerHitbox = player.Hitbox();
@@ -229,33 +180,26 @@ namespace skystride.vendor
                 
                 if (playerHitbox.Intersects(npcHitbox))
                 {
-                    // Deal damage immediately on first contact (timer == 0) or after cooldown
                     if (damageTimer == 0f || damageTimer >= damageCooldown)
                     {
                         player.TakeDamage(damagePerHit);
                         damageTimer = 0.001f; // Set to small value to prevent immediate re-trigger
                     }
                     
-                    // Update damage timer
                     damageTimer += dt;
                 }
                 else
                 {
-                    // Reset timer when not in contact
                     damageTimer = 0f;
                 }
             }
 
-            // Update visual sphere position
             if (visualSphere != null)
             {
                 visualSphere.SetPosition(position);
             }
         }
 
-        /// <summary>
-        /// Resolve collisions with environment and player
-        /// </summary>
         public void ResolveCollisions(System.Collections.Generic.IEnumerable<AABB> colliders, Player player = null)
         {
             if (colliders == null) return;
@@ -264,7 +208,6 @@ namespace skystride.vendor
             Vector3 p = position;
             bool groundedThisFrame = false;
 
-            // First, check collision with player
             if (player != null)
             {
                 AABB playerHitbox = player.Hitbox();
@@ -273,18 +216,15 @@ namespace skystride.vendor
                 Vector3 colMin = playerHitbox.Min;
                 Vector3 colMax = playerHitbox.Max;
 
-                // Check if colliding with player
                 if (!(npcMax.X <= colMin.X || npcMin.X >= colMax.X ||
                       npcMax.Y <= colMin.Y || npcMin.Y >= colMax.Y ||
                       npcMax.Z <= colMin.Z || npcMin.Z >= colMax.Z))
                 {
-                    // Colliding with player - push NPC away horizontally
                     float penX = Math.Min(npcMax.X - colMin.X, colMax.X - npcMin.X);
                     float penZ = Math.Min(npcMax.Z - colMin.Z, colMax.Z - npcMin.Z);
 
                     if (penX < penZ)
                     {
-                        // Resolve along X
                         Vector3 playerCenter = (colMin + colMax) * 0.5f;
                         if (position.X < playerCenter.X)
                             p.X = colMin.X - halfSize;
@@ -293,7 +233,6 @@ namespace skystride.vendor
                     }
                     else
                     {
-                        // Resolve along Z
                         Vector3 playerCenter = (colMin + colMax) * 0.5f;
                         if (position.Z < playerCenter.Z)
                             p.Z = colMin.Z - halfSize;
@@ -303,20 +242,16 @@ namespace skystride.vendor
                 }
             }
 
-            // Then check environment collisions
-
             foreach (var c in colliders)
             {
                 if (c == null) continue;
                 if (c.Owner == this) continue; // Don't collide with self
 
-                // Compute NPC box and collider box
                 Vector3 npcMin = new Vector3(p.X - halfSize, p.Y - halfSize, p.Z - halfSize);
                 Vector3 npcMax = new Vector3(p.X + halfSize, p.Y + halfSize, p.Z + halfSize);
                 Vector3 colMin = c.Min;
                 Vector3 colMax = c.Max;
 
-                // Quick reject
                 if (npcMax.X <= colMin.X || npcMin.X >= colMax.X ||
                     npcMax.Y <= colMin.Y || npcMin.Y >= colMax.Y ||
                     npcMax.Z <= colMin.Z || npcMin.Z >= colMax.Z)
@@ -324,14 +259,11 @@ namespace skystride.vendor
                     continue;
                 }
 
-                // Horizontal overlap
                 bool overlapX = npcMax.X > colMin.X && npcMin.X < colMax.X;
                 bool overlapZ = npcMax.Z > colMin.Z && npcMin.Z < colMax.Z;
 
-                // Vertical resolution (standing on top)
                 if (overlapX && overlapZ)
                 {
-                    // Landing on top
                     if (npcMin.Y < colMax.Y && npcMax.Y > colMax.Y)
                     {
                         p.Y = colMax.Y + halfSize;
@@ -342,7 +274,6 @@ namespace skystride.vendor
                         continue;
                     }
 
-                    // Hitting head
                     if (npcMax.Y > colMin.Y && npcMin.Y < colMin.Y)
                     {
                         p.Y = colMin.Y - halfSize;
@@ -353,32 +284,27 @@ namespace skystride.vendor
                     }
                 }
 
-                // Horizontal resolution
                 float penX = Math.Min(npcMax.X - colMin.X, colMax.X - npcMin.X);
                 float penZ = Math.Min(npcMax.Z - colMin.Z, colMax.Z - npcMin.Z);
 
                 if (penX < penZ)
                 {
-                    // Resolve along X
                     Vector3 colCenter = (colMin + colMax) * 0.5f;
                     if (position.X < colCenter.X)
                         p.X = colMin.X - halfSize;
                     else
                         p.X = colMax.X + halfSize;
                     
-                    // Bounce off wall - change direction
                     direction.X = -direction.X;
                 }
                 else
                 {
-                    // Resolve along Z
                     Vector3 colCenter = (colMin + colMax) * 0.5f;
                     if (position.Z < colCenter.Z)
                         p.Z = colMin.Z - halfSize;
                     else
                         p.Z = colMax.Z + halfSize;
                     
-                    // Bounce off wall - change direction
                     direction.Z = -direction.Z;
                 }
             }
@@ -390,7 +316,6 @@ namespace skystride.vendor
 
             position = p;
             
-            // Update collider position
             if (collider != null)
             {
                 collider.Position = position;
@@ -402,20 +327,12 @@ namespace skystride.vendor
             }
         }
 
-        /// <summary>
-        /// Take damage
-        /// </summary>
         public void TakeDamage(float damage)
         {
             health -= damage;
             if (health < 0f) health = 0f;
-
-            // TODO: Implement defensive/aggressive response
         }
 
-        /// <summary>
-        /// Check if NPC is dead
-        /// </summary>
         public bool IsDead()
         {
             return health <= 0f;
@@ -428,13 +345,11 @@ namespace skystride.vendor
                 visualSphere.Render();
             }
 
-            // Render Name and Health above head
             RenderNameTag();
         }
 
         private void RenderNameTag()
         {
-            // Get current matrices and viewport
             int[] viewport = new int[4];
             GL.GetInteger(GetPName.Viewport, viewport);
 
@@ -442,43 +357,26 @@ namespace skystride.vendor
             GL.GetFloat(GetPName.ModelviewMatrix, out modelViewMatrix);
             GL.GetFloat(GetPName.ProjectionMatrix, out projectionMatrix);
 
-            // Calculate position above head
             Vector3 headPos = position + new Vector3(0, radius + 0.5f, 0);
 
-            // Project to screen coordinates
             Vector4 clipPos = Vector4.Transform(new Vector4(headPos, 1.0f), modelViewMatrix * projectionMatrix);
 
-            // Check if in front of camera
             if (clipPos.W > 0)
             {
-                // Normalize to NDC
                 Vector3 ndc = clipPos.Xyz / clipPos.W;
-
-                // Convert to screen coordinates
-                // Viewport: [x, y, width, height]
-                // TextRenderer uses 0,0 at top-left
                 float screenX = viewport[0] + (ndc.X + 1) * 0.5f * viewport[2];
                 float screenY = viewport[1] + (1 - ndc.Y) * 0.5f * viewport[3];
 
-                // Center text
                 string text = $"{name} ({health} HP)";
                 
-                // Simple centering offset (approximate, since we don't measure text here easily without GDI+)
-                // Assuming char width ~8px at 16pt font
                 float textWidth = text.Length * 8f; 
                 screenX -= textWidth / 2f;
-
-                // Render text
-                // Use yellow for aggressive, green for others
                 Color color = npcType == NPCType.Aggressive ? Color.Red : Color.LightGreen;
                 
                 TextRenderer.RenderText(text, screenX, screenY, color, viewport[2], viewport[3]);
             }
         }
 
-        /// <summary>
-        /// Generate a random horizontal direction
-        /// </summary>
         private Vector3 GetRandomDirection()
         {
             float angle = (float)(random.NextDouble() * Math.PI * 2.0);
