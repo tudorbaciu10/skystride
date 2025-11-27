@@ -10,10 +10,13 @@ namespace skystride.vendor.collision
         public Vector3 Min => this.position - (this.size / 2f);
         public Vector3 Max => this.position + (this.size / 2f);
 
-        public AABB(Vector3 position, Vector3 size)
+        public object Owner { get; set; }
+
+        public AABB(Vector3 position, Vector3 size, object owner = null)
         {
             this.position = position;
             this.size = size;
+            this.Owner = owner;
         }
 
         public bool Intersects(AABB element)

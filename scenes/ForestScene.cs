@@ -105,6 +105,10 @@ namespace skystride.scenes
             AddEntity(new Rain(count: 2000, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 12f, maxSpeed: 24f));
 
             _shotgun = new Shotgun();
+
+            //AttachTrigger(movingBox, (p) => {
+            //    Console.WriteLine("Touched the moving box!");
+            //}, triggerOnce: false);
         }
 
         public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)

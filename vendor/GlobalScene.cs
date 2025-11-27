@@ -24,6 +24,25 @@ namespace skystride.scenes
         internal static float DrawDistanceSquared { get { return DrawDistance * DrawDistance; } }
         internal static Vector3 CurrentCameraPos; // updated every frame in Update()
 
+        // Trigger system
+        protected class TriggerInfo
+        {
+            public Action<Player> Action;
+            public bool TriggerOnce;
+            public bool IsTriggered;
+            public bool WasColliding;
+        }
+        protected Dictionary<object, TriggerInfo> _triggers = new Dictionary<object, TriggerInfo>();
+
+        public void AttachTrigger(ISceneEntity entity, Action<Player> action, bool triggerOnce = true)
+        {
+            if (entity == null || action == null) return;
+            if (!_triggers.ContainsKey(entity))
+            {
+                _triggers[entity] = new TriggerInfo { Action = action, TriggerOnce = triggerOnce, IsTriggered = false, WasColliding = false };
+            }
+        }
+
         protected class ModelEntity : ISceneEntity, IDisposable
         {
             private string _objectPath;
@@ -93,7 +112,7 @@ namespace skystride.scenes
                     var size = GetSize();
                     if (size != Vector3.Zero)
                     {
-                        _dynamicCollider = new AABB(_position, size);
+                        _dynamicCollider = new AABB(_position, size, this);
                         _collidersRef.Add(_dynamicCollider);
                     }
                 }
@@ -117,7 +136,7 @@ namespace skystride.scenes
                                 var size = GetSize();
                                 if (size != Vector3.Zero)
                                 {
-                                    _dynamicCollider = new AABB(_position, size);
+                                    _dynamicCollider = new AABB(_position, size, this);
                                     _collidersRef.Add(_dynamicCollider);
                                 }
                             }
@@ -164,7 +183,7 @@ namespace skystride.scenes
                 if (_dynamicCollider != null && _collidersRef != null)
                 {
                     _collidersRef.Remove(_dynamicCollider);
-                    _dynamicCollider = new AABB(_position, GetSize());
+                    _dynamicCollider = new AABB(_position, GetSize(), this);
                     _collidersRef.Add(_dynamicCollider);
                 }
             }
@@ -202,7 +221,7 @@ namespace skystride.scenes
             if (cube != null)
             {
                 Vector3 size = cube.GetSize();
-                Colliders.Add(new AABB(cube.GetPosition(), size));
+                Colliders.Add(new AABB(cube.GetPosition(), size, cube));
                 return;
             }
 
@@ -234,7 +253,7 @@ namespace skystride.scenes
                     {
                         colliderSize = new Vector3(hx * 2f, hy * 2f, hz * 2f);
                     }
-                    Colliders.Add(new AABB(plane.GetPosition(), colliderSize));
+                    Colliders.Add(new AABB(plane.GetPosition(), colliderSize, plane));
                 }
                 return;
             }
@@ -244,14 +263,14 @@ namespace skystride.scenes
             {
                 Vector3 size = checkboardTerrain.GetSize();
                 const float groundThickness = 0.2f; // thin collision layer
-                Colliders.Add(new AABB(checkboardTerrain.GetPosition(), new Vector3(size.X, groundThickness, size.Z)));
+                Colliders.Add(new AABB(checkboardTerrain.GetPosition(), new Vector3(size.X, groundThickness, size.Z), checkboardTerrain));
                 return;
             }
 
             var sphere = entity as Sphere;
             if (sphere != null) {
                 float radius = sphere.GetRadius();
-                Colliders.Add(new AABB(sphere.GetPosition(), new Vector3(radius * 2f, radius * 2f, radius * 2f)));
+                Colliders.Add(new AABB(sphere.GetPosition(), new Vector3(radius * 2f, radius * 2f, radius * 2f), sphere));
                 return;
             }
         }
@@ -311,6 +330,29 @@ namespace skystride.scenes
                 if (Bullets[i].IsDead)
                 {
                     Bullets.RemoveAt(i);
+                }
+            }
+
+            // Check for triggers
+            if (player != null)
+            {
+                AABB playerHitbox = player.Hitbox();
+                foreach (var collider in Colliders)
+                {
+                    if (collider.Owner != null && _triggers.TryGetValue(collider.Owner, out TriggerInfo info))
+                    {
+                        bool isColliding = playerHitbox.Intersects(collider);
+
+                        if (isColliding && !info.WasColliding)
+                        {
+                            if (!info.TriggerOnce || !info.IsTriggered)
+                            {
+                                info.Action(player);
+                                info.IsTriggered = true;
+                            }
+                        }
+                        info.WasColliding = isColliding;
+                    }
                 }
             }
         }
