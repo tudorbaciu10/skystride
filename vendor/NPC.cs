@@ -4,6 +4,7 @@ using skystride.scenes;
 using skystride.vendor.collision;
 using System;
 using System.Drawing;
+using OpenTK.Graphics.OpenGL;
 
 namespace skystride.vendor
 {
@@ -42,6 +43,7 @@ namespace skystride.vendor
         
         // NPC properties
         private NPCType npcType;
+        private string name;
         private float radius;
         private float moveSpeed;
         private float health;
@@ -72,10 +74,12 @@ namespace skystride.vendor
         /// <param name="type">Behavior type</param>
         /// <param name="radius">Visual radius (default 0.5f)</param>
         /// <param name="damage">Damage per hit (default 10)</param>
-        public NPC(Vector3 position, NPCType type = NPCType.Passive, float radius = 0.5f, int damage = 10)
+        /// <param name="name">NPC name (default "NPC")</param>
+        public NPC(Vector3 position, string name = "NPC", NPCType type = NPCType.Passive, float radius = 0.5f, int damage = 10)
         {
             this.position = position;
             this.npcType = type;
+            this.name = name;
             this.radius = radius;
             this.moveSpeed = 2.0f; // slower than player
             this.health = 100f;
@@ -413,6 +417,53 @@ namespace skystride.vendor
             if (visualSphere != null)
             {
                 visualSphere.Render();
+            }
+
+            // Render Name and Health above head
+            RenderNameTag();
+        }
+
+        private void RenderNameTag()
+        {
+            // Get current matrices and viewport
+            int[] viewport = new int[4];
+            GL.GetInteger(GetPName.Viewport, viewport);
+
+            Matrix4 modelViewMatrix, projectionMatrix;
+            GL.GetFloat(GetPName.ModelviewMatrix, out modelViewMatrix);
+            GL.GetFloat(GetPName.ProjectionMatrix, out projectionMatrix);
+
+            // Calculate position above head
+            Vector3 headPos = position + new Vector3(0, radius + 0.5f, 0);
+
+            // Project to screen coordinates
+            Vector4 clipPos = Vector4.Transform(new Vector4(headPos, 1.0f), modelViewMatrix * projectionMatrix);
+
+            // Check if in front of camera
+            if (clipPos.W > 0)
+            {
+                // Normalize to NDC
+                Vector3 ndc = clipPos.Xyz / clipPos.W;
+
+                // Convert to screen coordinates
+                // Viewport: [x, y, width, height]
+                // TextRenderer uses 0,0 at top-left
+                float screenX = viewport[0] + (ndc.X + 1) * 0.5f * viewport[2];
+                float screenY = viewport[1] + (1 - ndc.Y) * 0.5f * viewport[3];
+
+                // Center text
+                string text = $"{name} ({health} HP)";
+                
+                // Simple centering offset (approximate, since we don't measure text here easily without GDI+)
+                // Assuming char width ~8px at 16pt font
+                float textWidth = text.Length * 8f; 
+                screenX -= textWidth / 2f;
+
+                // Render text
+                // Use yellow for aggressive, green for others
+                Color color = npcType == NPCType.Aggressive ? Color.Red : Color.LightGreen;
+                
+                TextRenderer.RenderText(text, screenX, screenY, color, viewport[2], viewport[3]);
             }
         }
 
