@@ -24,7 +24,6 @@ namespace skystride.scenes
             _sky = new Skybox("assets/textures/skybox/skybox_forest.jpg", 400f);
             _sky.SetPosition(new Vector3(0f, 20f, 0f));
 
-            // Immediate near models (legacy constructor)
             AddEntity(new ModelEntity(
                 new Model("/assets/models/frog.obj", "/assets/models/frog.jpg"),
                 new Vector3(5f, 0.7f, 0f), 0.4f, -90f, 0f, -150f));

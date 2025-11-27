@@ -63,7 +63,7 @@ namespace skystride.vendor
         public float PitchDegrees { get { return pitch; } }
 
         // attached first-person weapon
-        private skystride.objects.weapons.Weapon attachedWeapon;
+        private Weapon attachedWeapon;
         private Inventory inventory;
 
         public bool doubleJumpEnabled = true;
