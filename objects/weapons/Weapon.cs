@@ -15,6 +15,7 @@ namespace skystride.objects.weapons
         public float Scale { get { return scale; } }
 
         protected Vector3 viewOffset = new Vector3(0.6f, -0.6f, -1.6f);
+        protected Vector3 spawnOffset = new Vector3(0.2f, -0.2f, -0.5f);
         protected Vector3 rotation = Vector3.Zero;
         protected float scale = 0.25f;
         protected float recoilForce = 0f;
@@ -68,10 +69,11 @@ namespace skystride.objects.weapons
             recoilRotation.X += recoilKickUp; // Rotate up (inverted from -= to make it rise)
 
             // viewOffset is in camera space: X=Right, Y=Up, Z=Back (so -Z is Front)
+            // Use spawnOffset for bullet origin to prevent clipping
             Vector3 muzzlePos = playerPos
-                              + right * viewOffset.X
-                              + up * viewOffset.Y
-                              - front * viewOffset.Z; // -(-1.6) = +1.6 * front
+                              + right * spawnOffset.X
+                              + up * spawnOffset.Y
+                              - front * spawnOffset.Z; 
 
             float speed = 100.0f;
             float lifetime = 3.0f;
