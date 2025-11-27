@@ -1,14 +1,16 @@
-﻿using skystride.objects;
+﻿using OpenTK;
+using OpenTK.Input;
+using skystride.objects;
+using skystride.objects.items;
 using skystride.objects.templates;
+using skystride.objects.weapons.shotguns;
 using skystride.vendor;
+using skystride.vendor.collision;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OpenTK;
-using OpenTK.Input;
-using skystride.vendor.collision;
 
 namespace skystride.scenes
 {
@@ -27,6 +29,12 @@ namespace skystride.scenes
             AddEntity(new ModelEntity(
                 new Model("/assets/models/frog.obj", "/assets/models/frog.jpg"),
                 new Vector3(5f, 0.7f, 0f), 0.4f, -90f, 0f, -150f));
+
+            // Add test NPC (white sphere with wandering AI)
+            AddEntity(new NPC(new Vector3(10f, 1f, 0f), NPC.NPCType.Aggressive, 0.5f));
+
+            Shotgun shotgunItem = new Shotgun();
+            AddEntity(new WeaponItem(new Shotgun(), new Vector3(-5f, 1f, 5f), shotgunItem.Scale));
         }
 
         public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)

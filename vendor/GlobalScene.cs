@@ -124,6 +124,13 @@ namespace skystride.scenes
                 Colliders.Add(new AABB(sphere.GetPosition(), new Vector3(radius * 2f, radius * 2f, radius * 2f), sphere));
                 return;
             }
+
+            var npc = entity as NPC;
+            if (npc != null)
+            {
+                Colliders.Add(npc.GetCollider());
+                return;
+            }
         }
 
         public void RemoveEntity(ISceneEntity entity)
@@ -154,6 +161,13 @@ namespace skystride.scenes
                 var item = Entities[i] as Item;
                 if (item != null)
                     item.Update(dt);
+
+                var npc = Entities[i] as NPC;
+                if (npc != null)
+                {
+                    npc.Update(dt, player);
+                    npc.ResolveCollisions(Colliders, player);
+                }
             }
 
             // Handle shooting only when input is enabled (window focused & console closed)

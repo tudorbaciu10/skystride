@@ -70,6 +70,7 @@
     <Compile Include="vendor\Inventory.cs" />
     <Compile Include="vendor\ModelEntity.cs" />
     <Compile Include="vendor\Player.cs" />
+    <Compile Include="vendor\NPC.cs" />
     <Compile Include="vendor\Skybox.cs" />
     <Compile Include="objects\templates\Cube.cs" />
     <Compile Include="objects\templates\Grid.cs" />

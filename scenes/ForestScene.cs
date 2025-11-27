@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using skystride.objects.weapons.pistols;
 using skystride.objects.weapons.shotguns;
+using skystride.objects.items;
 
 namespace skystride.scenes
 {
@@ -105,10 +106,10 @@ namespace skystride.scenes
 
             // Test Item System
             Glock glockItem = new Glock();
-            AddEntity(new skystride.objects.items.WeaponItem(glockItem, new Vector3(5f, 1f, 5f), glockItem.Scale));
+            AddEntity(new WeaponItem(glockItem, new Vector3(5f, 1f, 5f), glockItem.Scale));
 
             Shotgun shotgunItem = new Shotgun();
-            AddEntity(new skystride.objects.items.WeaponItem(shotgunItem, new Vector3(-5f, 1f, 5f), shotgunItem.Scale));
+            AddEntity(new WeaponItem(new Shotgun(), new Vector3(-5f, 1f, 5f), shotgunItem.Scale));
 
             //AttachTrigger(movingBox, (p) => {
             //    Console.WriteLine("Touched the moving box!");
