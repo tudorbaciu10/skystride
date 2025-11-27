@@ -67,9 +67,9 @@ namespace skystride.vendor
 
             fog = new Fog(Color.DarkBlue, FogMode.Exp2,0.005f,30f,250f);
 
-            //activeScene = new TemplateScene();
+            activeScene = new TemplateScene();
             //activeScene = new ArcticScene();
-            activeScene = new ForestScene();
+            //activeScene = new ForestScene();
 
             CursorVisible = false;
             this.isMouseCentered = true;
