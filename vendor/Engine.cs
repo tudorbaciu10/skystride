@@ -235,7 +235,10 @@ namespace skystride.vendor
 
             // Render console overlay 
             gameConsole.Render(Width, Height);
-            if(lightning.enabled) GL.Enable(EnableCap.Lighting);
+
+            player.RenderHUD(Width, Height);
+
+            if (lightning.enabled) GL.Enable(EnableCap.Lighting);
 
             SwapBuffers();
         }

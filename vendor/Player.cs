@@ -69,6 +69,10 @@ namespace skystride.vendor
         public bool doubleJumpEnabled = true;
         private bool hasDoubleJumped = false; // tracks if double jump was used since last time grounded
 
+        // Damage feedback
+        private float damageFlashTimer = 0f;
+        private const float damageFlashDuration = 0.5f;
+
         public Player()
         {
             this.health = 100;
@@ -90,6 +94,8 @@ namespace skystride.vendor
             {
                 health = 0;
             }
+            // Trigger damage flash
+            damageFlashTimer = damageFlashDuration;
         }
 
         public void SetPosition(Vector3 newPosition)
@@ -157,6 +163,13 @@ namespace skystride.vendor
         public void Update(KeyboardState current, KeyboardState previous, float dt)
         {
             if (dt <= 0f) return;
+
+            // Update damage flash timer
+            if (damageFlashTimer > 0f)
+            {
+                damageFlashTimer -= dt;
+                if (damageFlashTimer < 0f) damageFlashTimer = 0f;
+            }
 
             // Weapon switching
             if (current.IsKeyDown(Key.Number1)) SwitchWeapon(0);
@@ -502,6 +515,47 @@ namespace skystride.vendor
 
             if (depthWasEnabled) GL.Enable(EnableCap.DepthTest);
             GL.PopMatrix();
+        }
+
+        public void RenderHUD(int width, int height)
+        {
+            if (damageFlashTimer > 0f)
+            {
+                // Calculate alpha based on remaining time
+                float alpha = (damageFlashTimer / damageFlashDuration) * 0.5f; // Max alpha 0.5
+
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                GL.Disable(EnableCap.DepthTest);
+                GL.Disable(EnableCap.Texture2D);
+
+                GL.MatrixMode(MatrixMode.Projection);
+                GL.PushMatrix();
+                GL.LoadIdentity();
+                GL.Ortho(0, width, height, 0, -1, 1);
+
+                GL.MatrixMode(MatrixMode.Modelview);
+                GL.PushMatrix();
+                GL.LoadIdentity();
+
+                GL.Begin(PrimitiveType.Quads);
+                GL.Color4(1.0f, 0.0f, 0.0f, alpha);
+                GL.Vertex2(0, 0);
+                GL.Vertex2(width, 0);
+                GL.Vertex2(width, height);
+                GL.Vertex2(0, height);
+                GL.End();
+
+                GL.PopMatrix();
+                GL.MatrixMode(MatrixMode.Projection);
+                GL.PopMatrix();
+                GL.MatrixMode(MatrixMode.Modelview);
+
+                GL.Enable(EnableCap.DepthTest);
+                GL.Enable(EnableCap.Texture2D);
+                GL.Disable(EnableCap.Blend);
+                GL.Color4(1f, 1f, 1f, 1f); // Reset color
+            }
         }
     }
 }
