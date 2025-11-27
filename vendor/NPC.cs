@@ -7,38 +7,41 @@ using System.Drawing;
 using OpenTK.Graphics.OpenGL;
 
 namespace skystride.vendor
+{
 
     internal class NPC : ISceneEntity
-    
+    {
+
+
         public enum NPCType
-        
+        {
             Passive,
             Defensive,
             Aggressive
         }
 
         private Sphere visualSphere;
-        
+
         private Vector3 position;
         private Vector3 velocity;
         private Vector3 direction;
-        
+
         private NPCType npcType;
         private string name;
         private float radius;
         private float moveSpeed;
         private float health;
-        
+
         private AABB collider;
-        
+
         private float wanderTimer;
         private float wanderInterval;
         private Random random;
-        
+
         private float damageTimer;
         private float damageCooldown = 1.0f; // 1 second between damage ticks
         private int damagePerHit = 10; // damage dealt per hit
-        
+
         private float gravity = -18.0f;
         private float groundY = -10.0f;
         private float eyeHeight = 0.5f;
@@ -56,13 +59,13 @@ namespace skystride.vendor
             this.moveSpeed = 2.0f; // slower than player
             this.health = 100f;
             this.damagePerHit = damage;
-            
+
             this.damageTimer = 0f;
-            
+
             this.collider = new AABB(position, new Vector3(radius * 2f), this);
-            
+
             this.visualSphere = new Sphere(position, radius, Color.White, 16, 12);
-            
+
             this.random = new Random(Guid.NewGuid().GetHashCode());
             this.wanderInterval = 2.0f + (float)random.NextDouble() * 2.0f; // 2-4 seconds
             this.wanderTimer = 0f;
@@ -123,7 +126,7 @@ namespace skystride.vendor
                 Vector3 playerPos = player.position;
                 Vector3 toPlayer = playerPos - position;
                 toPlayer.Y = 0f; // keep movement horizontal
-                
+
                 if (toPlayer.LengthSquared > 0f)
                 {
                     toPlayer.NormalizeFast();
@@ -177,7 +180,7 @@ namespace skystride.vendor
             {
                 AABB playerHitbox = player.Hitbox();
                 AABB npcHitbox = GetCollider();
-                
+
                 if (playerHitbox.Intersects(npcHitbox))
                 {
                     if (damageTimer == 0f || damageTimer >= damageCooldown)
@@ -185,7 +188,7 @@ namespace skystride.vendor
                         player.TakeDamage(damagePerHit);
                         damageTimer = 0.001f; // Set to small value to prevent immediate re-trigger
                     }
-                    
+
                     damageTimer += dt;
                 }
                 else
@@ -294,7 +297,7 @@ namespace skystride.vendor
                         p.X = colMin.X - halfSize;
                     else
                         p.X = colMax.X + halfSize;
-                    
+
                     direction.X = -direction.X;
                 }
                 else
@@ -304,7 +307,7 @@ namespace skystride.vendor
                         p.Z = colMin.Z - halfSize;
                     else
                         p.Z = colMax.Z + halfSize;
-                    
+
                     direction.Z = -direction.Z;
                 }
             }
@@ -315,12 +318,12 @@ namespace skystride.vendor
             }
 
             position = p;
-            
+
             if (collider != null)
             {
                 collider.Position = position;
             }
-            
+
             if (visualSphere != null)
             {
                 visualSphere.SetPosition(position);
@@ -368,11 +371,11 @@ namespace skystride.vendor
                 float screenY = viewport[1] + (1 - ndc.Y) * 0.5f * viewport[3];
 
                 string text = $"{name} ({health} HP)";
-                
-                float textWidth = text.Length * 8f; 
+
+                float textWidth = text.Length * 8f;
                 screenX -= textWidth / 2f;
                 Color color = npcType == NPCType.Aggressive ? Color.Red : Color.LightGreen;
-                
+
                 TextRenderer.RenderText(text, screenX, screenY, color, viewport[2], viewport[3]);
             }
         }
