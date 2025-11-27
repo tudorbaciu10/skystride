@@ -19,6 +19,15 @@ namespace skystride.objects.weapons
         protected float scale = 0.25f;
         protected float recoilForce = 0f;
 
+        // Animation state
+        protected Vector3 recoilOffset = Vector3.Zero;
+        protected Vector3 recoilRotation = Vector3.Zero;
+        
+        // Configuration
+        protected float recoilRecoverySpeed = 5.0f;
+        protected float recoilKickBack = 0.2f;
+        protected float recoilKickUp = 10.0f; // degrees
+
         public Weapon(string name, int ammo, int damage)
         {
             this.name = name;
@@ -29,19 +38,34 @@ namespace skystride.objects.weapons
         public int Ammo { get { return ammo; } }
         public float RecoilForce { get { return recoilForce; } }
 
+        public virtual void Update(float dt)
+        {
+            // Recover from recoil
+            recoilOffset = Vector3.Lerp(recoilOffset, Vector3.Zero, dt * recoilRecoverySpeed);
+            recoilRotation = Vector3.Lerp(recoilRotation, Vector3.Zero, dt * recoilRecoverySpeed);
+        }
+
         public virtual void Render(Camera _camera)
         {
             if (model == null || !model.Loaded || _camera == null) return;
 
-            float rotX = rotation.X;
-            float rotY = rotation.Y;
-            model.Render(viewOffset, scale, rotX, rotY, rotation.Z);
+            float rotX = rotation.X + recoilRotation.X;
+            float rotY = rotation.Y + recoilRotation.Y;
+            float rotZ = rotation.Z + recoilRotation.Z;
+            
+            Vector3 finalPos = viewOffset + recoilOffset;
+
+            model.Render(finalPos, scale, rotX, rotY, rotZ);
         }
 
         public virtual Bullet Shoot(Vector3 playerPos, Vector3 front, Vector3 up, Vector3 right)
         {
             if (ammo <= 0) return null;
             ammo--;
+
+            // Trigger recoil
+            recoilOffset.Z += recoilKickBack; // Move back
+            recoilRotation.X += recoilKickUp; // Rotate up (inverted from -= to make it rise)
 
             // viewOffset is in camera space: X=Right, Y=Up, Z=Back (so -Z is Front)
             Vector3 muzzlePos = playerPos

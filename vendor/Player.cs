@@ -291,6 +291,12 @@ namespace skystride.vendor
             }
 
             position = pos;
+
+            // Update weapon animation
+            if (attachedWeapon != null)
+            {
+                attachedWeapon.Update(dt);
+            }
         }
 
         public Bullet CheckShoot(MouseState current, MouseState previous)
