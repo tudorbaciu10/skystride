@@ -271,7 +271,7 @@ namespace skystride.vendor
             }
 
             activeScene?.Dispose();
-            SoundManager.StopMusic(); // Stop music from previous scene
+            SoundManager.StopMusic();
             activeScene = newScene;
             if (activeScene != null) activeScene._engine = this;
             activeScene?.OnLoad();

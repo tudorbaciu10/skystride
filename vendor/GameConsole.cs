@@ -98,7 +98,8 @@ namespace skystride.vendor
                     AddLine("Hello from console.");
                     break;
                 case "help":
-                    AddLine("Available commands: hello, help, clear, dev, map [name], light [1|0]");
+                    AddLine("Available commands: hello, help, clear, dev");
+                    AddLine("Map commands: map <name>, light <1|0>, volume <0-100>");
                     break;
                 case "clear":
                     _lines.Clear();
@@ -138,7 +139,7 @@ namespace skystride.vendor
                             if (ok)
                                 AddLine("Loaded map: " + mapName);
                             else
-                                AddLine("Unknown map. Available: forest, arctic");
+                                AddLine("Unknown map. Available: forest, arctic, vertigont");
                         }
                     } else if (low.StartsWith("light "))
                     {

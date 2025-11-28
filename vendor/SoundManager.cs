@@ -10,10 +10,7 @@ namespace skystride.vendor
 
         public static void PlayMusic(string path)
         {
-            // Ensure we're on a thread that can use MediaPlayer (usually requires STA, but for simple playback might work or need dispatcher)
-            // WinForms apps are usually STA.
-            
-            StopMusic(); // Stop any currently playing music
+            StopMusic();
 
             string fullPath = Path.GetFullPath(path);
             Console.WriteLine($"Attempting to play music: {fullPath}");
@@ -31,7 +28,6 @@ namespace skystride.vendor
                     _mediaPlayer = new MediaPlayer();
                     _mediaPlayer.MediaEnded += (s, e) => 
                     {
-                        // Loop music
                         _mediaPlayer.Position = TimeSpan.Zero;
                         _mediaPlayer.Play();
                     };
@@ -59,7 +55,6 @@ namespace skystride.vendor
         {
             if (_mediaPlayer != null)
             {
-                // Clamp volume between 0 and 100
                 int clampedVolume = Math.Max(0, Math.Min(100, volume));
                 _mediaPlayer.Volume = clampedVolume / 100.0f;
                 Console.WriteLine($"Volume set to {clampedVolume}%");
