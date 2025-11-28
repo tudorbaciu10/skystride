@@ -62,6 +62,7 @@
     <Compile Include="objects\weapons\Weapon.cs" />
     <Compile Include="objects\weapons\Bullet.cs" />
     <Compile Include="scenes\ForestScene.cs" />
+    <Compile Include="scenes\VertigontScene.cs" />
     <Compile Include="shaders\Lighting.cs" />
     <Compile Include="shaders\Rain.cs" />
     <Compile Include="vendor\GameConsole.cs" />

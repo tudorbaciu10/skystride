@@ -67,9 +67,10 @@ namespace skystride.vendor
 
             fog = new Fog(Color.DarkBlue, FogMode.Exp2,0.005f,30f,250f);
 
-            activeScene = new TemplateScene();
+            //activeScene = new TemplateScene();
             //activeScene = new ArcticScene();
             //activeScene = new ForestScene();
+            activeScene = new VertigontScene();
 
             CursorVisible = false;
             this.isMouseCentered = true;
@@ -250,11 +251,17 @@ namespace skystride.vendor
             GlobalScene newScene = null;
             switch (key)
             {
+                case "template":
+                    newScene = new TemplateScene();
+                    break;
                 case "forest":
                     newScene = new ForestScene();
                     break;
                 case "arctic":
                     newScene = new ArcticScene();
+                    break;
+                case "vertigont":
+                    newScene = new VertigontScene();
                     break;
                 default:
                     return false; // unsupported map
