@@ -3,6 +3,7 @@ using System.Diagnostics;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using skystride.scenes; // for ISceneEntity
+using System.Drawing;
 
 namespace skystride.shaders
 {
@@ -26,6 +27,7 @@ namespace skystride.shaders
         private readonly float _minSize;
         private readonly float _maxSize;
         private readonly float _sizeScale; // global visibility scale
+        private Color _color;
 
         private float _minSupportedPointSize = 1f;
         private float _maxSupportedPointSize = 64f;
@@ -47,9 +49,10 @@ namespace skystride.shaders
         public Vector3 GetSize() { return Vector3.Zero; }
         public void SetSize(Vector3 size) { }
 
-        public Snow(int count = 1500, float areaSize = 80f, float spawnHeight = 35f, float groundY = 0f,
+        public Snow(Color? color = null, int count = 1500, float areaSize = 80f, float spawnHeight = 35f, float groundY = 0f,
  float minSpeed = 2.0f, float maxSpeed = 6.0f, float minSize = 2.5f, float maxSize = 5.0f, float sizeScale = 2.0f)
         {
+            _color = color ?? Color.White;
             _count = count < 10 ? 10 : count;
             _areaSize = areaSize;
             _spawnHeight = spawnHeight;
@@ -262,7 +265,7 @@ namespace skystride.shaders
                 var p = _particles[i];
                 if (p.Size < t1)
                 {
-                    GL.Color4(1f, 1f, 1f, 0.95f);
+                    GL.Color4(_color.R / 255f, _color.G / 255f, _color.B / 255f, 0.95f);
                     GL.Vertex3(p.Position.X, p.Position.Y, p.Position.Z);
                 }
             }
@@ -276,7 +279,7 @@ namespace skystride.shaders
                 var p = _particles[i];
                 if (p.Size >= t1 && p.Size < t2)
                 {
-                    GL.Color4(1f, 1f, 1f, 0.98f);
+                    GL.Color4(_color.R / 255f, _color.G / 255f, _color.B / 255f, 0.98f);
                     GL.Vertex3(p.Position.X, p.Position.Y, p.Position.Z);
                 }
             }
@@ -290,7 +293,7 @@ namespace skystride.shaders
                 var p = _particles[i];
                 if (p.Size >= t2)
                 {
-                    GL.Color4(1f, 1f, 1f, 1.0f);
+                    GL.Color4(_color.R / 255f, _color.G / 255f, _color.B / 255f, 1.0f);
                     GL.Vertex3(p.Position.X, p.Position.Y, p.Position.Z);
                 }
             }

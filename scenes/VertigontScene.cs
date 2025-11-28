@@ -52,6 +52,8 @@ namespace skystride.scenes
             wall4.SetTexture("assets/textures/siege_wall.jpg");
             wall4.SetTextureScale(8f, 3f);
             AddEntity(wall4);
+
+            AddEntity(new Snow(color: Color.Red, count: 7500, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 1.5f, maxSpeed: 4.5f));
         }
 
         public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
