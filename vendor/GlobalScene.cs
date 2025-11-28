@@ -12,6 +12,8 @@ namespace skystride.scenes
 {
     internal class GlobalScene : IDisposable
     {
+        public Engine _engine { get; set; }
+
         // Unified list for all entities
         protected readonly List<ISceneEntity> Entities = new List<ISceneEntity>();
         
@@ -147,6 +149,8 @@ namespace skystride.scenes
         }
 
         // Per-frame logic hook for scenes
+        public virtual void OnLoad() { }
+
         public virtual void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
             // Update camera position reference for distance culling

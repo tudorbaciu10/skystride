@@ -24,7 +24,7 @@ namespace skystride.vendor
         // main instances
         Camera camera;
         public Lighting lightning = new Lighting();
-        Player player = new Player();
+        public Player player = new Player();
         private bool isMouseCentered = false;
 
         // shader instances
@@ -71,6 +71,9 @@ namespace skystride.vendor
             //activeScene = new ArcticScene();
             //activeScene = new ForestScene();
             activeScene = new VertigontScene();
+
+            activeScene._engine = this;
+            activeScene.OnLoad();
 
             CursorVisible = false;
             this.isMouseCentered = true;
@@ -269,6 +272,8 @@ namespace skystride.vendor
 
             activeScene?.Dispose();
             activeScene = newScene;
+            if (activeScene != null) activeScene.Game = this;
+            activeScene?.OnLoad();
 
             player.SetPosition(new Vector3(0f, 5f, 3f));
             player.UpdateCamera(camera);

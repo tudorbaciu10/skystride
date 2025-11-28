@@ -47,13 +47,22 @@ namespace skystride.scenes
             wall3.SetTexture("assets/textures/siege_wall.jpg");
             wall3.SetTextureScale(8f, 3f);
             AddEntity(wall3);
-
             Plane wall4 = new Plane(new Vector3(0f, 5f, -60f), 135f, 1f, 10f, Color.LightGray, new Vector3(0f, 90f, 0f));
             wall4.SetTexture("assets/textures/siege_wall.jpg");
             wall4.SetTextureScale(8f, 3f);
             AddEntity(wall4);
 
             AddEntity(new Snow(color: Color.Red, count: 7500, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 1.5f, maxSpeed: 4.5f));
+        }
+
+        public override void OnLoad()
+        {
+            base.OnLoad();
+            
+            if (_engine != null && _engine.player != null)
+            {
+                _engine.player.SetPosition(new Vector3(50f, 2f, 30f));
+            }
         }
 
         public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
