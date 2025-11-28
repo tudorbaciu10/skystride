@@ -48,14 +48,14 @@ namespace skystride.vendor
         public NPCType Type { get { return npcType; } }
         public float Health { get { return health; } }
 
-        public NPC(Vector3 position, string name = "NPC", NPCType type = NPCType.Passive, float radius = 0.5f, int damage = 10)
+        public NPC(Vector3 position, string name = "NPC", float health = 100f, NPCType type = NPCType.Passive, float radius = 0.5f, int damage = 10)
         {
             this.position = position;
             this.npcType = type;
             this.name = name;
             this.radius = radius;
             this.moveSpeed = 2.0f; // slower than player
-            this.health = 100f;
+            this.health = health;
             this.damagePerHit = damage;
 
             this.damageTimer = 0f;
