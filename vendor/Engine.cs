@@ -37,14 +37,14 @@ namespace skystride.vendor
         private GameConsole gameConsole;
 
         // init engine window
-        public Engine() : base(800,600, new GraphicsMode(32,24,0,8))
+        public Engine() : base(800, 600, new GraphicsMode(32, 24, 0, 8))
         {
             VSync = VSyncMode.On;
             Title = "Skystride Engine";
             //WindowState = WindowState.Maximized;
 
-            X = (DisplayDevice.Default.Width - Width) /2;
-            Y = (DisplayDevice.Default.Height - Height) /2;
+            X = (DisplayDevice.Default.Width - Width) / 2;
+            Y = (DisplayDevice.Default.Height - Height) / 2;
         }
 
         // on load event
@@ -61,11 +61,11 @@ namespace skystride.vendor
             GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);
             GL.Enable(EnableCap.LineSmooth);
 
-            camera = new Camera(new Vector3(0,5,3), Width / (float)Height);
+            camera = new Camera(new Vector3(0, 5, 3), Width / (float)Height);
 
             gameConsole = new GameConsole(camera, player, this);
 
-            fog = new Fog(Color.DarkBlue, FogMode.Exp2,0.005f,30f,250f);
+            fog = new Fog(Color.DarkBlue, FogMode.Exp2, 0.005f, 30f, 250f);
 
             //activeScene = new TemplateScene();
             //activeScene = new ArcticScene();
@@ -94,7 +94,7 @@ namespace skystride.vendor
         {
             base.OnResize(e);
 
-            GL.Viewport(0,0, this.Width, this.Height);
+            GL.Viewport(0, 0, this.Width, this.Height);
 
             camera.Resize(Width / (float)Height);
 
@@ -156,7 +156,7 @@ namespace skystride.vendor
 
             if (!CursorVisible && this.isMouseCentered && Focused && !gameConsole.IsOpen)
             {
-                Mouse.SetPosition(X + Width /2f, Y + Height /2f);
+                Mouse.SetPosition(X + Width / 2f, Y + Height / 2f);
                 player.UpdateMouseState(this.currentMouseState);
             }
 
@@ -224,10 +224,10 @@ namespace skystride.vendor
             // crosshair
             camera.RenderCrosshair(Width, Height);
 
-            TextRenderer.RenderText($"x = {player.position.X}, y = {player.position.Y}, z = {player.position.Z}",16,24, Color.White, Width, Height);
+            TextRenderer.RenderText($"x = {player.position.X}, y = {player.position.Y}, z = {player.position.Z}", 16, 24, Color.White, Width, Height);
 
             // player info moved to left bottom
-            TextRenderer.RenderText($"{player.GetHealth()}+",32, Height -64, Color.DarkOrange, Width, Height,32f);
+            TextRenderer.RenderText($"{player.GetHealth()}+", 32, Height - 64, Color.DarkOrange, Width, Height, 32f);
 
             if (player.HasAttachedWeapon())
             {
@@ -271,6 +271,7 @@ namespace skystride.vendor
             }
 
             activeScene?.Dispose();
+            SoundManager.StopMusic(); // Stop music from previous scene
             activeScene = newScene;
             if (activeScene != null) activeScene._engine = this;
             activeScene?.OnLoad();

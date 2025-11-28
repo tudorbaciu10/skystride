@@ -58,11 +58,7 @@ namespace skystride.scenes
         public override void OnLoad()
         {
             base.OnLoad();
-            
-            if (_engine != null && _engine.player != null)
-            {
-                _engine.player.SetPosition(new Vector3(50f, 2f, 30f));
-            }
+            SoundManager.PlayMusic("../../assets/sounds/vertigont.wav");
         }
 
         public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)

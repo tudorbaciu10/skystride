@@ -179,6 +179,18 @@ namespace skystride.vendor
                                 AddLine("Lightning disabled");
                             }
                         }
+                    } else if (low.StartsWith("volume "))
+                    {
+                        string volStr = low.Substring("volume ".Length).Trim();
+                        if (int.TryParse(volStr, out int vol))
+                        {
+                            SoundManager.SetVolume(vol);
+                            AddLine($"Volume set to {vol}");
+                        }
+                        else
+                        {
+                            AddLine("Usage: volume <0-100>");
+                        }
                     }
                     else
                     {

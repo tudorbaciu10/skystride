@@ -48,6 +48,9 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
     <Compile Include="forms\MapEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,6 +92,7 @@
     <Compile Include="vendor\Engine.cs" />
     <Compile Include="vendor\Model.cs" />
     <Compile Include="vendor\TextRenderer.cs" />
+    <Compile Include="vendor\SoundManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
