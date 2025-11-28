@@ -107,6 +107,14 @@ namespace skystride.vendor
         public void AttachWeapon(skystride.objects.weapons.Weapon _weapon)
         {
             if (_weapon == null) return;
+
+            Weapon existing = inventory.GetWeaponByName(_weapon.Name);
+            if (existing != null)
+            {
+                existing.AddAmmo(_weapon.Ammo);
+                return;
+            }
+
             inventory.AddWeapon(_weapon);
             attachedWeapon = _weapon;
         }

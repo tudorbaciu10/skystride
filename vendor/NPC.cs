@@ -48,12 +48,14 @@ namespace skystride.vendor
         public NPCType Type { get { return npcType; } }
         public float Health { get { return health; } }
 
-        public NPC(Vector3 position, string name = "NPC", float health = 100f, NPCType type = NPCType.Passive, float radius = 0.5f, int damage = 10)
+        public Action<Vector3> OnDeath { get; set; }
+
+        public NPC(Vector3 position, string name = "NPC", float health = 100f, float size = 1.0f, NPCType type = NPCType.Passive, int damage = 10)
         {
             this.position = position;
             this.npcType = type;
             this.name = name;
-            this.radius = radius;
+            this.radius = size * 0.5f;
             this.moveSpeed = 2.0f; // slower than player
             this.health = health;
             this.damagePerHit = damage;
@@ -330,8 +332,14 @@ namespace skystride.vendor
 
         public void TakeDamage(float damage)
         {
+            bool wasAlive = health > 0f;
             health -= damage;
             if (health < 0f) health = 0f;
+
+            if (wasAlive && health <= 0f)
+            {
+                OnDeath?.Invoke(position);
+            }
         }
 
         public bool IsDead()

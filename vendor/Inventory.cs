@@ -27,6 +27,18 @@ namespace skystride.vendor
             return null;
         }
 
+        public Weapon GetWeaponByName(string name)
+        {
+            foreach (var w in _weapons)
+            {
+                if (w.Name == name)
+                {
+                    return w;
+                }
+            }
+            return null;
+        }
+
         public void SwitchWeapon(int index)
         {
             if (index >= 0 && index < _weapons.Count)

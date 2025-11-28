@@ -20,7 +20,7 @@ namespace skystride.scenes
     internal class VertigontScene : GlobalScene
     {
         private Skybox _sky;
-        private NPC boss = new NPC(new Vector3(0f, 0f, 0f), "Vertigont", 2000f, NPC.NPCType.Aggressive, damage:50);
+        private NPC boss = new NPC(new Vector3(30f, 0f, 20f), "Vertigont", 2000f, 3.0f, NPC.NPCType.Aggressive, damage:50);
 
         public VertigontScene()
         {
@@ -97,7 +97,18 @@ namespace skystride.scenes
             
             Vector3 spawnPos = new Vector3(x, 5f, z);
             
-            NPC enemy = new NPC(spawnPos, "Enemy", 100f, NPC.NPCType.Aggressive);
+            float size = 0.8f + (float)_random.NextDouble() * 0.4f;
+
+            NPC enemy = new NPC(spawnPos, "Enemy", 100f, size, NPC.NPCType.Aggressive);
+            
+            enemy.OnDeath = (pos) =>
+            {
+                if (_random.NextDouble() < 0.6)
+                {
+                    AddEntity(new WeaponItem(new Shotgun(), pos));
+                }
+            };
+
             AddEntity(enemy);
         }
 

@@ -37,7 +37,16 @@ namespace skystride.objects.weapons
         }
 
         public int Ammo { get { return ammo; } }
+        public string Name { get { return name; } }
         public float RecoilForce { get { return recoilForce; } }
+
+        public void AddAmmo(int amount)
+        {
+            if (amount > 0)
+            {
+                ammo += amount;
+            }
+        }
 
         public virtual void Update(float dt)
         {

@@ -31,8 +31,8 @@ namespace skystride.scenes
                 new Vector3(5f, 0.7f, 0f), 0.4f, -90f, 0f, -150f));
 
             // Add test NPC (white sphere with wandering AI)
-            AddEntity(new NPC(new Vector3(10f, 1f, 0f), "Angry Sphere", 100f, NPC.NPCType.Aggressive, 0.5f, 10));
-            AddEntity(new NPC(new Vector3(-10f, 1f, 0f), "Wandering Sphere", 100f, NPC.NPCType.Passive, 0.5f, 10));
+            AddEntity(new NPC(new Vector3(10f, 1f, 0f), "Angry Sphere", 100f, 1.0f, NPC.NPCType.Aggressive, 10));
+            AddEntity(new NPC(new Vector3(-10f, 1f, 0f), "Wandering Sphere", 100f, 1.0f, NPC.NPCType.Passive, 10));
 
             AddEntity(new WeaponItem(new Shotgun(), new Vector3(-5f, 1f, 5f)));
         }
