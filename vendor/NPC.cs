@@ -11,8 +11,6 @@ namespace skystride.vendor
 
     internal class NPC : ISceneEntity
     {
-
-
         public enum NPCType
         {
             Passive,

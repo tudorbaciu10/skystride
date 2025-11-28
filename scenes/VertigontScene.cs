@@ -59,7 +59,14 @@ namespace skystride.scenes
         {
             base.OnLoad();
             SoundManager.PlayMusic("../../assets/sounds/vertigont.wav");
+
+            Shotgun shotgun = new Shotgun();
+            _engine.player.AttachWeapon(new Shotgun());
         }
+
+        private float _spawnTimer = 0f;
+        private float _spawnCooldown = 3.0f;
+        private Random _random = new Random();
 
         public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)
         {
@@ -69,6 +76,24 @@ namespace skystride.scenes
             {
                 player.ResolveCollisions(Colliders);
             }
+
+            _spawnTimer += dt;
+            if (_spawnTimer >= _spawnCooldown)
+            {
+                _spawnTimer = 0f;
+                SpawnRandomEnemy();
+            }
+        }
+
+        private void SpawnRandomEnemy()
+        {
+            float x = (float)(_random.NextDouble() * 100.0 - 50.0);
+            float z = (float)(_random.NextDouble() * 100.0 - 50.0);
+            
+            Vector3 spawnPos = new Vector3(x, 5f, z);
+            
+            NPC enemy = new NPC(spawnPos, "Enemy", NPC.NPCType.Aggressive);
+            AddEntity(enemy);
         }
 
         public override void Render()
