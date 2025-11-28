@@ -272,7 +272,7 @@ namespace skystride.vendor
 
             activeScene?.Dispose();
             activeScene = newScene;
-            if (activeScene != null) activeScene.Game = this;
+            if (activeScene != null) activeScene._engine = this;
             activeScene?.OnLoad();
 
             player.SetPosition(new Vector3(0f, 5f, 3f));
