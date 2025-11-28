@@ -20,6 +20,7 @@ namespace skystride.scenes
     internal class VertigontScene : GlobalScene
     {
         private Skybox _sky;
+        private NPC boss = new NPC(new Vector3(0f, 0f, 0f), "Vertigont", 2000f, NPC.NPCType.Aggressive, damage:50);
 
         public VertigontScene()
         {
@@ -51,6 +52,8 @@ namespace skystride.scenes
             wall4.SetTexture("assets/textures/siege_wall.jpg");
             wall4.SetTextureScale(8f, 3f);
             AddEntity(wall4);
+
+            AddEntity(boss);
 
             AddEntity(new Snow(color: Color.Red, count: 7500, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 1.5f, maxSpeed: 4.5f));
         }
@@ -92,7 +95,7 @@ namespace skystride.scenes
             
             Vector3 spawnPos = new Vector3(x, 5f, z);
             
-            NPC enemy = new NPC(spawnPos, "Enemy", NPC.NPCType.Aggressive);
+            NPC enemy = new NPC(spawnPos, "Enemy", 100f, NPC.NPCType.Aggressive);
             AddEntity(enemy);
         }
 
