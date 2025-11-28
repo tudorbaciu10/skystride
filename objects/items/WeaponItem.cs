@@ -14,6 +14,11 @@ namespace skystride.objects.items
             _weapon = weapon;
         }
 
+        public WeaponItem(Weapon weapon, Vector3 position)
+            : this(weapon, position, weapon.Scale)
+        {
+        }
+
         public override void OnPickup(Player player)
         {
             if (player != null)

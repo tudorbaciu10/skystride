@@ -34,8 +34,7 @@ namespace skystride.scenes
             AddEntity(new NPC(new Vector3(10f, 1f, 0f), "Angry Sphere", 100f, NPC.NPCType.Aggressive, 0.5f, 10));
             AddEntity(new NPC(new Vector3(-10f, 1f, 0f), "Wandering Sphere", 100f, NPC.NPCType.Passive, 0.5f, 10));
 
-            Shotgun shotgunItem = new Shotgun();
-            AddEntity(new WeaponItem(shotgunItem, new Vector3(-5f, 1f, 5f), shotgunItem.Scale));
+            AddEntity(new WeaponItem(new Shotgun(), new Vector3(-5f, 1f, 5f)));
         }
 
         public override void Update(float dt, Player player, Camera camera, KeyboardState currentKeyboard, KeyboardState previousKeyboard, MouseState currentMouse, MouseState previousMouse)

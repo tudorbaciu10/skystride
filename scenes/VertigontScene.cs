@@ -55,6 +55,8 @@ namespace skystride.scenes
 
             AddEntity(boss);
 
+            AddEntity(new WeaponItem(new Shotgun(), new Vector3(-5f, 1f, 5f)));
+
             AddEntity(new Snow(color: Color.Red, count: 7500, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 1.5f, maxSpeed: 4.5f));
         }
 

@@ -105,11 +105,9 @@ namespace skystride.scenes
             AddEntity(new Rain(count: 2000, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 12f, maxSpeed: 24f));
 
             // Test Item System
-            Glock glockItem = new Glock();
-            AddEntity(new WeaponItem(glockItem, new Vector3(5f, 1f, 5f), glockItem.Scale));
+            AddEntity(new WeaponItem(new Glock(), new Vector3(5f, 1f, 5f)));
 
-            Shotgun shotgunItem = new Shotgun();
-            AddEntity(new WeaponItem(new Shotgun(), new Vector3(-5f, 1f, 5f), shotgunItem.Scale));
+            AddEntity(new WeaponItem(new Shotgun(), new Vector3(-5f, 1f, 5f)));
 
             //AttachTrigger(movingBox, (p) => {
             //    Console.WriteLine("Touched the moving box!");
