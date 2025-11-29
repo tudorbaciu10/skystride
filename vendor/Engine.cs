@@ -208,6 +208,11 @@ namespace skystride.vendor
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
+            // Update projection matrix every frame to support FOV changes (zoom)
+            Matrix4 projection = camera.GetProjectionMatrix();
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadMatrix(ref projection);
+
             Matrix4 viewMatrix = this.camera.GetViewMatrix();
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref viewMatrix);
@@ -241,6 +246,7 @@ namespace skystride.vendor
             gameConsole.Render(Width, Height);
 
             player.RenderHUD(Width, Height);
+            player.RenderWeaponUI(Width, Height);
 
             if (lightning.enabled) GL.Enable(EnableCap.Lighting);
 

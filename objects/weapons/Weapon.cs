@@ -88,5 +88,14 @@ namespace skystride.objects.weapons
             float lifetime = 3.0f;
             return new Bullet(muzzlePos, front, speed, lifetime);
         }
+
+        public virtual void OnRightClick(Player player) { }
+
+        public virtual void RenderUI(int width, int height) { }
+
+        public Vector3 ItemRotation { get; protected set; } = Vector3.Zero;
+        public Vector3 ItemRotationSpeed { get; protected set; } = new Vector3(0, 45.0f, 0);
+
+        public virtual float GetDesiredFov() { return 60.0f; }
     }
 }

@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using skystride.objects.weapons.pistols;
 using skystride.objects.weapons.shotguns;
+using skystride.objects.weapons.snipers;
 using skystride.objects.items;
 
 namespace skystride.scenes
@@ -55,7 +56,7 @@ namespace skystride.scenes
 
             AddEntity(boss);
 
-            AddEntity(new WeaponItem(new Shotgun(), new Vector3(-5f, 1f, 5f)));
+            AddEntity(new WeaponItem(new Sniper(), new Vector3(-5f, 1f, 5f)));
 
             AddEntity(new Snow(color: Color.Red, count: 7500, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 1.5f, maxSpeed: 4.5f));
         }
@@ -65,8 +66,9 @@ namespace skystride.scenes
             base.OnLoad();
             SoundManager.PlayMusic("../../assets/sounds/vertigont.wav");
 
-            Shotgun shotgun = new Shotgun();
-            _engine.player.AttachWeapon(new Shotgun());
+            _engine.player.SetPosition(new Vector3(0f, 2f, -20f));
+
+            _engine.player.AttachWeapon(new Sniper());
         }
 
         private float _spawnTimer = 0f;

@@ -62,6 +62,7 @@
     <Compile Include="objects\templates\Sphere.cs" />
     <Compile Include="objects\weapons\pistols\Glock.cs" />
     <Compile Include="objects\weapons\shotguns\Shotgun.cs" />
+    <Compile Include="objects\weapons\snipers\Sniper.cs" />
     <Compile Include="objects\weapons\Weapon.cs" />
     <Compile Include="objects\weapons\Bullet.cs" />
     <Compile Include="scenes\ForestScene.cs" />

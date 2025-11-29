@@ -25,6 +25,7 @@ namespace skystride.vendor
 
         // projection
         private float fov = 60.0f;
+        public float Fov { get { return fov; } set { fov = value; } }
         private float aspectRatio;
 
         // yaw/pitch accessors

@@ -12,6 +12,8 @@ namespace skystride.objects.items
             : base(weapon.ModelPath, weapon.TexturePath, position, scale)
         {
             _weapon = weapon;
+            SetRotation(weapon.ItemRotation.X, weapon.ItemRotation.Y, weapon.ItemRotation.Z);
+            RotationSpeed = weapon.ItemRotationSpeed;
         }
 
         public WeaponItem(Weapon weapon, Vector3 position)

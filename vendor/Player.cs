@@ -345,6 +345,14 @@ namespace skystride.vendor
                 }
                 return b;
             }
+
+            // Right click handling
+            bool rightClick = current.IsButtonDown(MouseButton.Right) && !previous.IsButtonDown(MouseButton.Right);
+            if (attachedWeapon != null && rightClick)
+            {
+                attachedWeapon.OnRightClick(this);
+            }
+
             return null;
         }
 
@@ -507,6 +515,10 @@ namespace skystride.vendor
             camera.SetPosition(this.position);
             camera.SetRotation(this.yaw, this.pitch);
             camera.SetVectors(this.front, this.up, this.right);
+
+            float targetFov = attachedWeapon != null ? attachedWeapon.GetDesiredFov() : 60.0f;
+            // Simple Lerp
+            camera.Fov = camera.Fov + (targetFov - camera.Fov) * 0.1f;
         }
 
         public void RenderWeapon(Camera camera)
@@ -523,6 +535,14 @@ namespace skystride.vendor
 
             if (depthWasEnabled) GL.Enable(EnableCap.DepthTest);
             GL.PopMatrix();
+        }
+
+        public void RenderWeaponUI(int width, int height)
+        {
+            if (attachedWeapon != null)
+            {
+                attachedWeapon.RenderUI(width, height);
+            }
         }
 
         public void RenderHUD(int width, int height)
