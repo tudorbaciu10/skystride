@@ -69,8 +69,8 @@ namespace skystride.vendor
 
             //activeScene = new TemplateScene();
             //activeScene = new ArcticScene();
-            //activeScene = new ForestScene();
-            activeScene = new VertigontScene();
+            activeScene = new ForestScene();
+            //activeScene = new VertigontScene();
 
             activeScene._engine = this;
             activeScene.OnLoad();
