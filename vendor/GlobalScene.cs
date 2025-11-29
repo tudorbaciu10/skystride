@@ -35,6 +35,7 @@ namespace skystride.scenes
             public bool WasColliding;
         }
         protected Dictionary<object, TriggerInfo> _triggers = new Dictionary<object, TriggerInfo>();
+        protected Dictionary<ISceneEntity, bool> _entityCollisionStates = new Dictionary<ISceneEntity, bool>();
 
         public void AttachTrigger(ISceneEntity entity, Action<Player> action, bool triggerOnce = true)
         {
@@ -53,6 +54,7 @@ namespace skystride.scenes
         {
             if (entity == null) return;
             Entities.Add(entity);
+            _entityCollisionStates[entity] = collidable;
 
             var item = entity as Item;
             if (item != null)
@@ -139,12 +141,22 @@ namespace skystride.scenes
         {
             if (entity == null) return;
             Entities.Remove(entity);
+            if (_entityCollisionStates.ContainsKey(entity))
+            {
+                _entityCollisionStates.Remove(entity);
+            }
+
             Colliders.Clear();
             var currentEntities = new List<ISceneEntity>(Entities);
             Entities.Clear();
             foreach (var ent in currentEntities)
             {
-                AddEntity(ent, true);
+                bool collidable = true;
+                if (_entityCollisionStates.ContainsKey(ent))
+                {
+                    collidable = _entityCollisionStates[ent];
+                }
+                AddEntity(ent, collidable);
             }
         }
 
