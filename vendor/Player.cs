@@ -73,6 +73,8 @@ namespace skystride.vendor
         private float damageFlashTimer = 0f;
         private const float damageFlashDuration = 0.5f;
 
+        public bool GodMode { get; set; } = false;
+
         public Player()
         {
             this.health = 100;
@@ -89,6 +91,7 @@ namespace skystride.vendor
 
         public void TakeDamage(int damage)
         {
+            if (GodMode) return;
             health -= damage;
             if (health < 0)
             {
@@ -145,6 +148,37 @@ namespace skystride.vendor
         public int GetAmmo()
         {
             return attachedWeapon != null ? attachedWeapon.Ammo : 0;
+        }
+
+        public void AddAmmo(int amount)
+        {
+            if (attachedWeapon != null)
+            {
+                attachedWeapon.AddAmmo(amount);
+            }
+        }
+
+        public void GiveWeapon(string name)
+        {
+            name = name.ToLowerInvariant();
+            Weapon w = null;
+            switch (name)
+            {
+                case "glock":
+                    w = new skystride.objects.weapons.pistols.Glock();
+                    break;
+                case "shotgun":
+                    w = new skystride.objects.weapons.shotguns.Shotgun();
+                    break;
+                case "sniper":
+                    w = new skystride.objects.weapons.snipers.Sniper();
+                    break;
+            }
+
+            if (w != null)
+            {
+                AttachWeapon(w);
+            }
         }
 
         public void ToggleDevMode()

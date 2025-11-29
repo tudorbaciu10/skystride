@@ -40,6 +40,8 @@ namespace skystride.vendor
         private LoadingScreen loadingScreen;
         private bool _isLoadingScene = false;
 
+        public static bool HideUI = false;
+
         // init engine window
         public Engine() : base(800, 600, new GraphicsMode(32, 24, 0, 8))
         {
@@ -273,27 +275,34 @@ namespace skystride.vendor
             player.RenderWeapon(camera);
 
             GL.Disable(EnableCap.Lighting);
-            // crosshair
-            camera.RenderCrosshair(Width, Height);
-
-            TextRenderer.RenderText($"x = {player.position.X}, y = {player.position.Y}, z = {player.position.Z}", 16, 24, Color.White, Width, Height);
-
-            // player info moved to left bottom
-            TextRenderer.RenderText($"{player.GetHealth()}+", 32, Height - 64, Color.DarkOrange, Width, Height, 32f);
-
-            if (player.HasAttachedWeapon())
+            
+            if (!HideUI)
             {
-                string ammoText = $"{player.GetAmmo()}";
-                float fontSize = 32f;
-                float textWidth = ammoText.Length * (fontSize * 0.6f);
-                TextRenderer.RenderText(ammoText, Width - (int)textWidth - 32, Height - 64, Color.DarkOrange, Width, Height, fontSize);
+                // crosshair
+                camera.RenderCrosshair(Width, Height);
+
+                TextRenderer.RenderText($"x = {player.position.X}, y = {player.position.Y}, z = {player.position.Z}", 16, 24, Color.White, Width, Height);
+
+                // player info moved to left bottom
+                TextRenderer.RenderText($"{player.GetHealth()}+", 32, Height - 64, Color.DarkOrange, Width, Height, 32f);
+
+                if (player.HasAttachedWeapon())
+                {
+                    string ammoText = $"{player.GetAmmo()}";
+                    float fontSize = 32f;
+                    float textWidth = ammoText.Length * (fontSize * 0.6f);
+                    TextRenderer.RenderText(ammoText, Width - (int)textWidth - 32, Height - 64, Color.DarkOrange, Width, Height, fontSize);
+                }
             }
 
             // Render console overlay 
             gameConsole.Render(Width, Height);
 
-            player.RenderHUD(Width, Height);
-            player.RenderWeaponUI(Width, Height);
+            if (!HideUI)
+            {
+                player.RenderHUD(Width, Height);
+                player.RenderWeaponUI(Width, Height);
+            }
 
             if (lightning.enabled) GL.Enable(EnableCap.Lighting);
 

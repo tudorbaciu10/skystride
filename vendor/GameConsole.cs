@@ -121,8 +121,51 @@ namespace skystride.vendor
 
                     player.ToggleDevMode();
                     break;
+                case "god":
+                    player.GodMode = !player.GodMode;
+                    AddLine("God mode: " + (player.GodMode ? "ON" : "OFF"));
+                    break;
+                case "hideui":
+                    Engine.HideUI = !Engine.HideUI;
+                    AddLine("UI Hidden: " + Engine.HideUI);
+                    break;
                 default:
-                    if (low.StartsWith("map "))
+                    if (low.StartsWith("add "))
+                    {
+                        string[] parts = low.Split(' ');
+                        if (parts.Length >= 3)
+                        {
+                            string type = parts[1];
+                            string val = parts[2];
+
+                            if (type == "ammo")
+                            {
+                                if (int.TryParse(val, out int amount))
+                                {
+                                    player.AddAmmo(amount);
+                                    AddLine($"Added {amount} ammo.");
+                                }
+                                else
+                                {
+                                    AddLine("Invalid amount.");
+                                }
+                            }
+                            else if (type == "weapon")
+                            {
+                                player.GiveWeapon(val);
+                                AddLine($"Gave weapon: {val}");
+                            }
+                            else
+                            {
+                                AddLine("Unknown add type. Usage: add ammo <amount> | add weapon <name>");
+                            }
+                        }
+                        else
+                        {
+                            AddLine("Usage: add ammo <amount> | add weapon <name>");
+                        }
+                    }
+                    else if (low.StartsWith("map "))
                     {
                         string mapName = low.Substring("map ".Length).Trim();
                         if (engine == null)
