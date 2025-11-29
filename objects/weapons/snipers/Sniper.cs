@@ -28,7 +28,7 @@ namespace skystride.objects.weapons.snipers
             
             // Item rotation (e.g. lie flat)
             this.ItemRotation = new Vector3(-90f, 0f, 0f);
-            this.ItemRotationSpeed = Vector3.Zero; // Disable auto-rotation
+            this.ItemRotationSpeed = new Vector3(0f, 0f, 90f);
         }
 
         public override void OnRightClick(Player player)
