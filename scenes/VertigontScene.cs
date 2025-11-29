@@ -54,6 +54,10 @@ namespace skystride.scenes
             wall4.SetTextureScale(8f, 3f);
             AddEntity(wall4);
 
+            ModelEntity treescan = new ModelEntity("/assets/models/treescan.obj", "/assets/models/treescan.jpg", new Vector3(0f, 20f, 0f), 2f, 0f, 0f, 0f, 1f, 1f);
+            treescan.SetRotation(-90f, 0f, 0f);
+            AddEntity(treescan, false);
+
             AddEntity(boss);
 
             AddEntity(new WeaponItem(new Sniper(), new Vector3(-5f, 1f, 5f)));
