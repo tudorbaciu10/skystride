@@ -66,7 +66,7 @@ namespace skystride.scenes
             base.OnLoad();
             SoundManager.PlayMusic("../../assets/sounds/vertigont.wav");
 
-            _engine.player.SetPosition(new Vector3(0f, 2f, -20f));
+            _engine.player.SetPosition(new Vector3(0f, 5f, -20f));
 
             _engine.player.AttachWeapon(new Sniper());
         }
@@ -108,6 +108,11 @@ namespace skystride.scenes
                 if (_random.NextDouble() < 0.6)
                 {
                     AddEntity(new WeaponItem(new Shotgun(), pos));
+                }
+
+                if(_random.NextDouble() < 0.9)
+                {
+                    AddEntity(new MedkitItem(pos, 0.01f, 30));
                 }
             };
 

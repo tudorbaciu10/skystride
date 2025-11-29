@@ -98,6 +98,18 @@ namespace skystride.vendor
             damageFlashTimer = damageFlashDuration;
         }
 
+        public int Heal(int amount)
+        {
+            int maxHealth = 100;
+            int oldHealth = health;
+            health += amount;
+            if (health > maxHealth)
+            {
+                health = maxHealth;
+            }
+            return health - oldHealth;
+        }
+
         public void SetPosition(Vector3 newPosition)
         {
             this.position = newPosition;

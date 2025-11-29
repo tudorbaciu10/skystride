@@ -59,6 +59,7 @@
     </Compile>
     <Compile Include="objects\CheckboardTerrain.cs" />
     <Compile Include="objects\EditorGizmo.cs" />
+    <Compile Include="objects\items\MedkitItem.cs" />
     <Compile Include="objects\templates\Sphere.cs" />
     <Compile Include="objects\weapons\pistols\Glock.cs" />
     <Compile Include="objects\weapons\shotguns\Shotgun.cs" />
