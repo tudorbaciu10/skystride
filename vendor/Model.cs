@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Threading.Tasks;
 
 namespace skystride.vendor
 {
@@ -31,34 +32,40 @@ namespace skystride.vendor
         private string detectedTexturePath;
         private bool hasTexcoords;
 
-        private float _texScaleU =1f;
-        private float _texScaleV =1f;
+        private float _texScaleU = 1f;
+        private float _texScaleV = 1f;
+
+        private bool isDataLoaded = false;
+        private bool isUploaded = false;
+        private Bitmap textureBitmap;
 
         public Model(string objectPath, string objectPathTexture = "assets/textures/undefined.jpg")
         {
             SourcePath = Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName, objectPath.TrimStart('/', '\\'));
             detectedTexturePath = Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName, objectPathTexture.TrimStart('/', '\\'));
 
-            try
+            Task.Run(() =>
             {
-                LoadOBJ(SourcePath);
-                if (normals.Count == 0)
-                    ComputeNormals();
-                ComputeBounds();
-                if (!hasTexcoords)
-                    GeneratePlanarTexcoords();
-                UploadToGPU();
-                LoadTextureOrFallback();
-                Loaded = true;
+                try
+                {
+                    LoadOBJ(SourcePath);
+                    if (normals.Count == 0)
+                        ComputeNormals();
+                    ComputeBounds();
+                    if (!hasTexcoords)
+                        GeneratePlanarTexcoords();
 
-                Console.WriteLine("[Model] Loaded {0} ({1} vertices, {2} faces){3}",
-                    Path.GetFileName(SourcePath), vertices.Count, indexCount / 3, hasTexcoords ? " with texcoords" : " (generated UVs)");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("[Model] Failed to load {0}: {1}", SourcePath, ex.Message);
-                Loaded = false;
-            }
+                    // Load texture data into memory but don't upload yet
+                    LoadTextureBitmap();
+
+                    isDataLoaded = true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[Model] Failed to load {0}: {1}", SourcePath, ex.Message);
+                    Loaded = false;
+                }
+            });
         }
 
         private void LoadOBJ(string path)
@@ -319,7 +326,7 @@ namespace skystride.vendor
             indexCount = indices.Count;
         }
 
-        private void LoadTextureOrFallback()
+        private void LoadTextureBitmap()
         {
             string baseDir = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
             string fallback = Path.Combine(baseDir, "assets", "textures", "undefined.jpg");
@@ -330,7 +337,27 @@ namespace skystride.vendor
             else if (File.Exists(fallback))
                 pathToUse = fallback;
 
-            if (pathToUse == null)
+            if (pathToUse != null)
+            {
+                try
+                {
+                    // Load into a temporary bitmap to avoid locking the file or threading issues with GDI+ if possible
+                    // But Bitmap(path) locks the file. We can copy it.
+                    using (var temp = new Bitmap(pathToUse))
+                    {
+                        textureBitmap = new Bitmap(temp);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[Model] Failed to load texture bitmap '{0}': {1}", pathToUse, ex.Message);
+                }
+            }
+        }
+
+        private void UploadTexture()
+        {
+            if (textureBitmap == null)
             {
                 Console.WriteLine("[Model] No texture found and fallback missing. Rendering untextured.");
                 textureHandle = 0;
@@ -342,15 +369,12 @@ namespace skystride.vendor
                 int handle = GL.GenTexture();
                 GL.BindTexture(TextureTarget.Texture2D, handle);
 
-                using (var bmp = new Bitmap(pathToUse))
-                {
-                    var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-                    var data = bmp.LockBits(rect, ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
-                        data.Width, data.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra,
-                        PixelType.UnsignedByte, data.Scan0);
-                    bmp.UnlockBits(data);
-                }
+                var rect = new Rectangle(0, 0, textureBitmap.Width, textureBitmap.Height);
+                var data = textureBitmap.LockBits(rect, ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
+                    data.Width, data.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra,
+                    PixelType.UnsignedByte, data.Scan0);
+                textureBitmap.UnlockBits(data);
 
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapLinear);
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
@@ -362,35 +386,52 @@ namespace skystride.vendor
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[Model] Failed to load texture '{0}': {1}", pathToUse, ex.Message);
+                Console.WriteLine("[Model] Failed to upload texture: {0}", ex.Message);
                 textureHandle = 0;
+            }
+            finally
+            {
+                textureBitmap.Dispose();
+                textureBitmap = null;
             }
         }
 
         public void SetTextureScale(float u, float v)
         {
-            _texScaleU = u <=0f ?1f : u;
-            _texScaleV = v <=0f ?1f : v;
+            _texScaleU = u <= 0f ? 1f : u;
+            _texScaleV = v <= 0f ? 1f : v;
         }
 
         public void Render(Vector3 position, float scale, float rotX, float rotY, float rotZ)
         {
+            if (!isDataLoaded) return; // Still loading in background
+
+            if (!isUploaded)
+            {
+                UploadToGPU();
+                UploadTexture();
+                isUploaded = true;
+                Loaded = true;
+                Console.WriteLine("[Model] Loaded {0} ({1} vertices, {2} faces){3}",
+                    Path.GetFileName(SourcePath), vertices.Count, indexCount / 3, hasTexcoords ? " with texcoords" : " (generated UVs)");
+            }
+
             if (!Loaded) return;
 
             GL.PushMatrix();
             GL.Translate(position);
-            if (rotX !=0f) GL.Rotate(rotX,1f,0f,0f);
-            if (rotY !=0f) GL.Rotate(rotY,0f,1f,0f);
-            if (rotZ !=0f) GL.Rotate(rotZ,0f,0f,1f);
+            if (rotX != 0f) GL.Rotate(rotX, 1f, 0f, 0f);
+            if (rotY != 0f) GL.Rotate(rotY, 0f, 1f, 0f);
+            if (rotZ != 0f) GL.Rotate(rotZ, 0f, 0f, 1f);
             GL.Scale(scale, scale, scale);
             GL.Translate(-center);
 
-            GL.Color3(1f,1f,1f);
+            GL.Color3(1f, 1f, 1f);
 
             GL.EnableClientState(ArrayCap.VertexArray);
             GL.EnableClientState(ArrayCap.NormalArray);
 
-            bool bindTexcoords = textureHandle !=0 && texcoords.Count == vertices.Count;
+            bool bindTexcoords = textureHandle != 0 && texcoords.Count == vertices.Count;
             if (bindTexcoords)
             {
                 GL.Enable(EnableCap.Texture2D);
@@ -399,20 +440,20 @@ namespace skystride.vendor
                 // Set texture matrix for scaling
                 GL.MatrixMode(MatrixMode.Texture);
                 GL.LoadIdentity();
-                GL.Scale(_texScaleU, _texScaleV,1f);
+                GL.Scale(_texScaleU, _texScaleV, 1f);
                 GL.MatrixMode(MatrixMode.Modelview);
             }
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.VertexPointer(3, VertexPointerType.Float,0, IntPtr.Zero);
+            GL.VertexPointer(3, VertexPointerType.Float, 0, IntPtr.Zero);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, nbo);
-            GL.NormalPointer(NormalPointerType.Float,0, IntPtr.Zero);
+            GL.NormalPointer(NormalPointerType.Float, 0, IntPtr.Zero);
 
             if (bindTexcoords)
             {
                 GL.BindBuffer(BufferTarget.ArrayBuffer, tbo);
-                GL.TexCoordPointer(2, TexCoordPointerType.Float,0, IntPtr.Zero);
+                GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, IntPtr.Zero);
             }
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
@@ -422,7 +463,7 @@ namespace skystride.vendor
             if (bindTexcoords)
             {
                 GL.DisableClientState(ArrayCap.TextureCoordArray);
-                GL.BindTexture(TextureTarget.Texture2D,0);
+                GL.BindTexture(TextureTarget.Texture2D, 0);
                 GL.Disable(EnableCap.Texture2D);
                 // Reset texture matrix
                 GL.MatrixMode(MatrixMode.Texture);
@@ -443,6 +484,7 @@ namespace skystride.vendor
             if (tbo != 0) GL.DeleteBuffer(tbo);
             if (ebo != 0) GL.DeleteBuffer(ebo);
             if (textureHandle != 0) GL.DeleteTexture(textureHandle);
+            if (textureBitmap != null) textureBitmap.Dispose();
         }
     }
 }

@@ -85,12 +85,22 @@ namespace skystride.vendor
             {
                 if (_objectPath != null)
                 {
-                    try
+                    // If model is null, start loading
+                    if (_model == null)
                     {
-                        _model = new Model(_objectPath, _texturePath);
-                        _model.SetTextureScale(_texScaleU, _texScaleV);
-                        _isLoaded = _model.Loaded;
-                        if (_isLoaded && _collidersRef != null)
+                        try
+                        {
+                            _model = new Model(_objectPath, _texturePath);
+                            _model.SetTextureScale(_texScaleU, _texScaleV);
+                        }
+                        catch { _isLoaded = false; }
+                    }
+                    
+                    // Check if loading finished
+                    if (_model != null && _model.Loaded)
+                    {
+                        _isLoaded = true;
+                        if (_collidersRef != null)
                         {
                             var size = GetSize();
                             if (size != Vector3.Zero)
@@ -100,18 +110,21 @@ namespace skystride.vendor
                             }
                         }
                     }
-                    catch { _isLoaded = false; }
                 }
             }
-            else if (_isLoaded && distSq > _unloadDistanceSq)
+            else if (distSq > _unloadDistanceSq)
             {
-                try { _model?.Dispose(); } catch { }
-                _model = null;
-                _isLoaded = false;
-                if (_dynamicCollider != null && _collidersRef != null)
+                // Only unload if we have a model (loaded or loading)
+                if (_model != null)
                 {
-                    _collidersRef.Remove(_dynamicCollider);
-                    _dynamicCollider = null;
+                    try { _model.Dispose(); } catch { }
+                    _model = null;
+                    _isLoaded = false;
+                    if (_dynamicCollider != null && _collidersRef != null)
+                    {
+                        _collidersRef.Remove(_dynamicCollider);
+                        _dynamicCollider = null;
+                    }
                 }
             }
         }
@@ -120,7 +133,7 @@ namespace skystride.vendor
         {
             if (Vector3.DistanceSquared(_position, GlobalScene.CurrentCameraPos) > GlobalScene.DrawDistanceSquared)
                 return;
-            if (_model != null && _model.Loaded)
+            if (_model != null)
                 _model.Render(_position, _scale, _rx, _ry, _rz);
         }
 

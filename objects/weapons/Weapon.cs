@@ -57,7 +57,7 @@ namespace skystride.objects.weapons
 
         public virtual void Render(Camera _camera)
         {
-            if (model == null || !model.Loaded || _camera == null) return;
+            if (model == null || _camera == null) return;
 
             float rotX = rotation.X + recoilRotation.X;
             float rotY = rotation.Y + recoilRotation.Y;
