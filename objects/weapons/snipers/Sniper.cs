@@ -14,21 +14,21 @@ namespace skystride.objects.weapons.snipers
     {
         private bool isScoped = false;
 
-        public Sniper() : base("Sniper", 10, 100)
+        public Sniper(float _scale = 0.005f) : base("Sniper", 10, 100)
         {
             this.ModelPath = "assets/models/weapons/sniper.obj";
             this.TexturePath = "assets/models/weapons/sniper.jpg";
             this.model = new Model(this.ModelPath, this.TexturePath);
             this.model.SetTextureScale(1f, 1f);
 
-            this.viewOffset = new Vector3(0.9f, -0.7f, -2f);
-            this.scale = 0.05f;
-            this.rotation = new Vector3(-90f, 0f, 90f);
+            this.viewOffset = new Vector3(0.9f, -0.7f, -3f);
+            this.scale = _scale;
+            this.rotation = new Vector3(0f, 0f, 0f);
             this.recoilForce = 10f;
             
             // Item rotation (e.g. lie flat)
-            this.ItemRotation = new Vector3(-90f, 0f, 0f);
-            this.ItemRotationSpeed = new Vector3(0f, 0f, 90f);
+            this.ItemRotation = new Vector3(0f, 0f, 0f);
+            this.ItemRotationSpeed = new Vector3(0f, 90f, 0f);
         }
 
         public override void OnRightClick(Player player)

@@ -60,7 +60,7 @@ namespace skystride.scenes
 
             AddEntity(boss);
 
-            AddEntity(new WeaponItem(new Sniper(), new Vector3(-5f, 1f, 5f)));
+            AddEntity(new WeaponItem(new Sniper(_scale: 0.003f), new Vector3(-5f, 1f, 5f)));
 
             AddEntity(new Snow(color: Color.Red, count: 7500, areaSize: 120f, spawnHeight: 50f, groundY: -10f, minSpeed: 1.5f, maxSpeed: 4.5f));
         }
@@ -137,7 +137,7 @@ namespace skystride.scenes
                 }
                 else if (scaled < shotgunChance + glockChance + medkitChance + sniperChance)
                 {
-                    AddEntity(new WeaponItem(new Sniper(), pos));
+                    AddEntity(new WeaponItem(new Sniper(_scale: 0.003f), pos));
                 }
             };
 
