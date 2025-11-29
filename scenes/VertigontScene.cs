@@ -105,14 +105,35 @@ namespace skystride.scenes
             
             enemy.OnDeath = (pos) =>
             {
-                if (_random.NextDouble() < 0.6)
+                const double noDropChance = 0.60;
+                const double shotgunChance = 0.30;
+                const double glockChance = 0.30;
+                const double medkitChance = 0.25; 
+                const double sniperChance = 0.15;
+
+                double roll = _random.NextDouble();
+                if (roll < noDropChance)
+                {
+                    return;
+                }
+
+                double scaled = (roll - noDropChance) / (1.0 - noDropChance);
+
+                if (scaled < shotgunChance)
                 {
                     AddEntity(new WeaponItem(new Shotgun(), pos));
                 }
-
-                if(_random.NextDouble() < 0.9)
+                else if (scaled < shotgunChance + glockChance)
+                {
+                    AddEntity(new WeaponItem(new skystride.objects.weapons.pistols.Glock(), pos));
+                }
+                else if (scaled < shotgunChance + glockChance + medkitChance)
                 {
                     AddEntity(new MedkitItem(pos, 0.01f, 30));
+                }
+                else if (scaled < shotgunChance + glockChance + medkitChance + sniperChance)
+                {
+                    AddEntity(new WeaponItem(new Sniper(), pos));
                 }
             };
 
