@@ -95,6 +95,7 @@
     <Compile Include="vendor\Model.cs" />
     <Compile Include="vendor\TextRenderer.cs" />
     <Compile Include="vendor\SoundManager.cs" />
+	<Compile Include="vendor\LoadingScreen.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

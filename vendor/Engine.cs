@@ -36,6 +36,10 @@ namespace skystride.vendor
         // console system
         private GameConsole gameConsole;
 
+        // loading screen
+        private LoadingScreen loadingScreen;
+        private bool _isLoadingScene = false;
+
         // init engine window
         public Engine() : base(800, 600, new GraphicsMode(32, 24, 0, 8))
         {
@@ -67,13 +71,31 @@ namespace skystride.vendor
 
             fog = new Fog(Color.DarkBlue, FogMode.Exp2, 0.005f, 30f, 250f);
 
+            // Initialize loading screen
+            loadingScreen = new LoadingScreen();
+            loadingScreen.Show();
+            loadingScreen.SetProgress(0.1f);
+            RenderLoadingFrame(); // Show initial loading screen
+
             //activeScene = new TemplateScene();
             //activeScene = new ArcticScene();
             //activeScene = new ForestScene();
+            loadingScreen.SetProgress(0.3f);
+            RenderLoadingFrame();
+            
             activeScene = new VertigontScene();
+            loadingScreen.SetProgress(0.5f);
+            RenderLoadingFrame();
 
             activeScene._engine = this;
+            loadingScreen.SetProgress(0.7f);
+            RenderLoadingFrame();
+            
             activeScene.OnLoad();
+            loadingScreen.SetProgress(0.9f);
+            RenderLoadingFrame();
+
+            loadingScreen.Hide();
 
             CursorVisible = false;
             this.isMouseCentered = true;
@@ -218,6 +240,31 @@ namespace skystride.vendor
             GL.LoadMatrix(ref viewMatrix);
 
             activeScene?.Render();
+            
+            if (_isLoadingScene && activeScene != null)
+            {
+                float progress;
+                bool loaded = activeScene.IsFullyLoaded(out progress);
+
+                if (!loaded)
+                {
+                    // Clear the screen again to hide the partially loaded scene
+                    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+                    // Render loading screen
+                    loadingScreen.SetProgress(progress);
+                    loadingScreen.Render(Width, Height);
+
+                    SwapBuffers();
+                    return; // Skip rest of frame
+                }
+                else
+                {
+                    _isLoadingScene = false;
+                    loadingScreen.Hide();
+                }
+            }
+
             lightning.Render();
 
             this.fog.Render();
@@ -257,6 +304,13 @@ namespace skystride.vendor
         internal bool ChangeScene(string mapName)
         {
             string key = (mapName ?? string.Empty).Trim().ToLowerInvariant();
+            
+            // Show loading screen
+            loadingScreen.Show();
+            loadingScreen.SetLoadingText($"LOADING {key.ToUpper()}...");
+            loadingScreen.SetProgress(0.0f);
+            RenderLoadingFrame();
+            
             GlobalScene newScene = null;
             switch (key)
             {
@@ -273,19 +327,50 @@ namespace skystride.vendor
                     newScene = new VertigontScene();
                     break;
                 default:
+                    loadingScreen.Hide();
                     return false; // unsupported map
             }
 
+            loadingScreen.SetProgress(0.3f);
+            RenderLoadingFrame();
+
             activeScene?.Dispose();
             SoundManager.StopMusic();
+            
+            loadingScreen.SetProgress(0.5f);
+            RenderLoadingFrame();
+            
             activeScene = newScene;
             if (activeScene != null) activeScene._engine = this;
+            
+            loadingScreen.SetProgress(0.7f);
+            RenderLoadingFrame();
+            
             activeScene?.OnLoad();
+            
+            loadingScreen.SetProgress(0.9f);
+            RenderLoadingFrame();
 
             player.SetPosition(new Vector3(0f, 5f, 3f));
             player.UpdateCamera(camera);
             MapEditor.UpdateScene(mapName);
+            
+            // Start async loading phase
+            _isLoadingScene = true;
+            
+            // Force one update to start loading entities immediately
+            activeScene?.Update(0f, player, camera, currentKeyboardState, previousKeyboardState, currentMouseState, previousMouseState);
+            
             return true;
+        }
+
+        // Helper method to render a frame with just the loading screen
+        private void RenderLoadingFrame()
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            loadingScreen.Render(Width, Height);
+            SwapBuffers();
+            ProcessEvents(); // Process window events
         }
     }
 }

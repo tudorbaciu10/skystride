@@ -22,10 +22,10 @@ namespace skystride.vendor
 
         private Vector3 minBound, maxBound, center, size;
         public bool Loaded { get; private set; }
+        public bool IsDataLoaded => isDataLoaded;
         public string SourcePath { get; private set; }
         public Vector3 Center { get { return center; } }
         public float BBoxHeight { get { return size.Y; } }
-
         public Vector3 BoundsSize { get { return size; } }
 
         private int textureHandle;

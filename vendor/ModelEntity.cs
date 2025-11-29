@@ -181,5 +181,19 @@ namespace skystride.vendor
         }
 
         public string ModelPath { get { return _objectPath; } }
+        
+        public bool IsLoaded 
+        { 
+            get 
+            { 
+                if (_model != null) return _model.IsDataLoaded;
+                // If we have a path but no model, we are not loaded (unless we haven't started loading yet? 
+                // But for the purpose of "waiting for load", we should consider it not loaded if it's meant to be loaded)
+                // However, ModelEntity does lazy loading based on distance. 
+                // For the initial map load, we probably want to force load everything or at least check things near player.
+                // For now, let's assume if _objectPath is set, we want it loaded.
+                return _objectPath == null || (_model != null && _model.IsDataLoaded);
+            } 
+        }
     }
 }

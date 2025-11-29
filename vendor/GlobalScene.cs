@@ -277,5 +277,28 @@ namespace skystride.scenes
                 }
             }
         }
+        public bool IsFullyLoaded(out float progress)
+        {
+            int total = 0;
+            int loaded = 0;
+            for (int i = 0; i < Entities.Count; i++)
+            {
+                var me = Entities[i] as ModelEntity;
+                if (me != null)
+                {
+                    total++;
+                    if (me.IsLoaded) loaded++;
+                }
+            }
+            
+            if (total == 0) 
+            {
+                progress = 1.0f;
+                return true;
+            }
+            
+            progress = (float)loaded / total;
+            return loaded == total;
+        }
     }
 }
