@@ -536,16 +536,15 @@ namespace skystride.vendor
         public void RenderWeapon(Camera camera)
         {
             if (attachedWeapon == null) return;
+            
+            GL.Clear(ClearBufferMask.DepthBufferBit);
+            
             GL.MatrixMode(MatrixMode.Modelview);
             GL.PushMatrix();
             GL.LoadIdentity();
 
-            bool depthWasEnabled = GL.IsEnabled(EnableCap.DepthTest);
-            if (depthWasEnabled) GL.Disable(EnableCap.DepthTest);
-
             attachedWeapon.Render(camera);
 
-            if (depthWasEnabled) GL.Enable(EnableCap.DepthTest);
             GL.PopMatrix();
         }
 
