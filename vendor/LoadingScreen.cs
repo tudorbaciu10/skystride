@@ -57,65 +57,56 @@ namespace skystride.vendor
             GL.Disable(EnableCap.Lighting);
             GL.Disable(EnableCap.Texture2D);
 
-            // Draw dark background overlay
+            // HL2 Style Colors
+            Color bgColor = Color.FromArgb(255, 40, 40, 40); // Dark Grey
+            Color amberColor = Color.FromArgb(255, 255, 176, 0); // HL2 Amber
+            Color darkAmber = Color.FromArgb(255, 74, 50, 0); // Darker Amber for empty bar
+
+            // Draw background overlay
             GL.Begin(PrimitiveType.Quads);
-            GL.Color4(0.0f, 0.0f, 0.0f, 0.95f); // Almost black
+            GL.Color4(bgColor);
             GL.Vertex2(0, 0);
             GL.Vertex2(windowWidth, 0);
             GL.Vertex2(windowWidth, windowHeight);
             GL.Vertex2(0, windowHeight);
             GL.End();
 
-            // Draw loading text
-            int textY = windowHeight / 2 - 60;
-            TextRenderer.RenderText(_loadingText, windowWidth / 2 - 100, textY, Color.White, windowWidth, windowHeight, 24f);
+            // Layout
+            int centerX = windowWidth / 2;
+            int centerY = windowHeight / 2;
+            int barWidth = 300;
+            int barHeight = 8; // Thin bar
+            int barX = centerX - barWidth / 2;
+            int barY = centerY + 20;
 
-            // Draw progress bar (Half-Life style with blocks)
-            int barWidth = 400;
-            int barHeight = 30;
-            int barX = (windowWidth - barWidth) / 2;
-            int barY = windowHeight / 2;
+            // Draw loading text (Centered above bar)
+            string text = _loadingText.ToUpper();
+            float fontSize = 24f;
+            // Estimate text width for centering: approx 0.6 * fontSize per char
+            int textWidth = (int)(text.Length * (fontSize * 0.6f)); 
+            TextRenderer.RenderText(text, centerX - textWidth / 2, barY - 40, amberColor, windowWidth, windowHeight, fontSize);
 
-            // Draw background/border of progress bar
+            // Draw progress bar background (Dark Amber)
             GL.Begin(PrimitiveType.Quads);
-            GL.Color4(0.3f, 0.3f, 0.3f, 1.0f); // Dark gray background
-            GL.Vertex2(barX - 2, barY - 2);
-            GL.Vertex2(barX + barWidth + 2, barY - 2);
-            GL.Vertex2(barX + barWidth + 2, barY + barHeight + 2);
-            GL.Vertex2(barX - 2, barY + barHeight + 2);
-            GL.End();
-
-            // Draw inner black area
-            GL.Begin(PrimitiveType.Quads);
-            GL.Color4(0.0f, 0.0f, 0.0f, 1.0f);
+            GL.Color4(darkAmber);
             GL.Vertex2(barX, barY);
             GL.Vertex2(barX + barWidth, barY);
             GL.Vertex2(barX + barWidth, barY + barHeight);
             GL.Vertex2(barX, barY + barHeight);
             GL.End();
 
-            // Draw progress blocks (HL style)
-            int blockCount = 30;
-            int blockWidth = (barWidth - (blockCount - 1) * 2) / blockCount; // 2px spacing
-            int filledBlocks = (int)(_progress * blockCount);
-
-            for (int i = 0; i < filledBlocks; i++)
+            // Draw filled progress bar (Bright Amber)
+            int filledWidth = (int)(barWidth * _progress);
+            if (filledWidth > 0)
             {
-                int blockX = barX + i * (blockWidth + 2);
-                
                 GL.Begin(PrimitiveType.Quads);
-                GL.Color4(0.9f, 0.9f, 0.9f, 1.0f); // Light gray/white blocks
-                GL.Vertex2(blockX, barY + 2);
-                GL.Vertex2(blockX + blockWidth, barY + 2);
-                GL.Vertex2(blockX + blockWidth, barY + barHeight - 2);
-                GL.Vertex2(blockX, barY + barHeight - 2);
+                GL.Color4(amberColor);
+                GL.Vertex2(barX, barY);
+                GL.Vertex2(barX + filledWidth, barY);
+                GL.Vertex2(barX + filledWidth, barY + barHeight);
+                GL.Vertex2(barX, barY + barHeight);
                 GL.End();
             }
-
-            // Draw percentage text below bar
-            int percentage = (int)(_progress * 100);
-            string percentText = $"{percentage}%";
-            TextRenderer.RenderText(percentText, windowWidth / 2 - 20, barY + barHeight + 20, Color.LightGray, windowWidth, windowHeight, 16f);
 
             // Restore matrices
             GL.MatrixMode(MatrixMode.Projection);
